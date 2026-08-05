@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+torch
+transformers
+opencv-python
+Pillow
+tqdm
+ultralytics

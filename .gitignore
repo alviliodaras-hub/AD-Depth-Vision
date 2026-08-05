@@ -1,0 +1,31 @@
+# Python / Virtual Environment
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mac App Bundle & OS junk
+*.app/
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Uploads & Processed Video Files
+uploads/
+processed/
+*.mp4
+*.avi
+*.mov
+
+# AI Models & Cache
+*.pt
+*.bin
+*.onnx
+.huggingface/
+
+# IDE & Temp
+.vscode/
+.idea/
+scratch/

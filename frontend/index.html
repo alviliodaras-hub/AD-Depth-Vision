@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD-Depth Vision | AI Video to Depth Map, Pose & 3D White Converter</title>
+    <meta name="description" content="Convert any video into a depth map, multi-character motion pivot, or 3D white clay mannequin video using state-of-the-art AI.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-mesh"></div>
+    
+    <main class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🔮</span>
+                <h1>AD-Depth Vision</h1>
+            </div>
+            <p class="subtitle">Transform videos into 3D Depth Maps, Motion Pivots, or 3D White Characters.</p>
+        </header>
+
+        <section class="upload-section" id="upload-section">
+            <div class="mode-selector">
+                <h3>Select Processing Feature</h3>
+                <div class="mode-options">
+                    <label class="mode-card selected" data-mode="depth">
+                        <input type="radio" name="mode" value="depth" checked hidden>
+                        <div class="mode-icon">🗺️</div>
+                        <div class="mode-info">
+                            <strong>Depth Map</strong>
+                            <p>3D Spatial Depth Estimation</p>
+                        </div>
+                    </label>
+                    <label class="mode-card" data-mode="pose">
+                        <input type="radio" name="mode" value="pose" hidden>
+                        <div class="mode-icon">🕺</div>
+                        <div class="mode-info">
+                            <strong>Character Motion Pivot</strong>
+                            <p>Multi-Character Pose Tracking (3+ People)</p>
+                        </div>
+                    </label>
+                    <label class="mode-card" data-mode="3d_white">
+                        <input type="radio" name="mode" value="3d_white" hidden>
+                        <div class="mode-icon">🗿</div>
+                        <div class="mode-info">
+                            <strong>3D White Character</strong>
+                            <p>Untextured 3D Clay Mannequin Render</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="drop-zone" id="drop-zone">
+                <div class="upload-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h2>Drag & Drop your video</h2>
+                <p>or <span class="browse-btn">browse files</span></p>
+                <p class="formats">Supports MP4, AVI, MOV (Max 50MB recommended)</p>
+                <input type="file" id="file-input" accept="video/mp4,video/x-m4v,video/*" hidden>
+            </div>
+
+            <div class="colormap-selector" id="colormap-section">
+                <h3>Depth Style</h3>
+                <div class="colormap-options" id="colormap-options">
+                    <label class="colormap-option selected" data-value="grayscale">
+                        <input type="radio" name="colormap" value="grayscale" checked hidden>
+                        <div class="colormap-preview grayscale-preview"></div>
+                        <span>Grayscale</span>
+                    </label>
+                    <label class="colormap-option" data-value="turbo">
+                        <input type="radio" name="colormap" value="turbo" hidden>
+                        <div class="colormap-preview turbo-preview"></div>
+                        <span>Turbo</span>
+                    </label>
+                    <label class="colormap-option" data-value="magma">
+                        <input type="radio" name="colormap" value="magma" hidden>
+                        <div class="colormap-preview magma-preview"></div>
+                        <span>Magma</span>
+                    </label>
+                    <label class="colormap-option" data-value="inferno">
+                        <input type="radio" name="colormap" value="inferno" hidden>
+                        <div class="colormap-preview inferno-preview"></div>
+                        <span>Inferno</span>
+                    </label>
+                    <label class="colormap-option" data-value="plasma">
+                        <input type="radio" name="colormap" value="plasma" hidden>
+                        <div class="colormap-preview plasma-preview"></div>
+                        <span>Plasma</span>
+                    </label>
+                    <label class="colormap-option" data-value="viridis">
+                        <input type="radio" name="colormap" value="viridis" hidden>
+                        <div class="colormap-preview viridis-preview"></div>
+                        <span>Viridis</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <section class="processing-section hidden" id="processing-section">
+            <div class="loader">
+                <div class="scanner"></div>
+                <div class="progress-ring"></div>
+            </div>
+            <h2 id="status-text">Uploading Video...</h2>
+            <p id="progress-detail">Our AI is analyzing each frame.</p>
+        </section>
+
+        <section class="results-section hidden" id="results-section">
+            <h2>Transformation Complete</h2>
+            
+            <div class="video-compare">
+                <div class="video-container">
+                    <h3>Original</h3>
+                    <video id="original-video" controls muted loop></video>
+                </div>
+                <div class="video-container">
+                    <h3 id="result-title">Depth Map / Motion Pivot</h3>
+                    <video id="depth-video" controls muted loop></video>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-primary" id="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Processed Video
+                </button>
+                <button class="btn btn-secondary" id="reset-btn">Convert Another</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
