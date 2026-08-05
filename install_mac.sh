@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================
 # AD-Depth Vision Installer for macOS
-# Creates a portable, self-contained app bundle
+# Creates a portable, self-healing app bundle for any Mac
 # ============================================================
 
 set -e
@@ -59,16 +59,31 @@ echo "📦 Installing dependencies (this may take a few minutes)..."
 
 echo "✅ Dependencies installed successfully."
 
-# Create the launcher script
+# Create self-healing launcher script inside app
 cat > "$MACOS_DIR/launch.sh" << 'LAUNCHER'
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESOURCES="$SCRIPT_DIR/../Resources"
 
-# Activate venv
-source "$RESOURCES/venv/bin/activate"
+# Clear Gatekeeper quarantine attribute automatically
+xattr -dr com.apple.quarantine "$SCRIPT_DIR/../.." 2>/dev/null || true
 
-# Open browser after a short delay
+# Self-healing Python environment check:
+# Recreates venv automatically if app is copied to another Mac or user folder
+VENV_DIR="$RESOURCES/venv"
+CURRENT_PYTHON="$VENV_DIR/bin/python"
+
+if [ ! -f "$CURRENT_PYTHON" ] || ! "$CURRENT_PYTHON" -c "import sys" 2>/dev/null; then
+    echo "⚙️ Initializing Python environment for this Mac..."
+    rm -rf "$VENV_DIR"
+    python3 -m venv "$VENV_DIR"
+    "$VENV_DIR/bin/pip" install --upgrade pip --quiet
+    "$VENV_DIR/bin/pip" install --default-timeout=1000 -r "$RESOURCES/backend/requirements.txt"
+fi
+
+source "$VENV_DIR/bin/activate"
+
+# Open browser after short delay
 (sleep 3 && open "http://127.0.0.1:8000/app/") &
 
 # Start the server
@@ -79,13 +94,23 @@ uvicorn main:app --host 127.0.0.1 --port 8000
 LAUNCHER
 chmod +x "$MACOS_DIR/launch.sh"
 
-# Create the main executable
+# Create main executable inside app
 cat > "$MACOS_DIR/ADDepthVision" << 'EXEC'
 #!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 osascript -e "tell application \"Terminal\" to do script \"'$SCRIPT_DIR/launch.sh'\""
 EXEC
 chmod +x "$MACOS_DIR/ADDepthVision"
+
+# Create 1-click launcher command at root (bypasses Gatekeeper completely)
+cat > "$SCRIPT_DIR/Start-AD-Depth-Vision.command" << 'CMD'
+#!/bin/bash
+DIR="$(cd "$(dirname "$0")" && pwd)"
+xattr -dr com.apple.quarantine "$DIR/AD-Depth Vision.app" 2>/dev/null || true
+chmod -R +x "$DIR/AD-Depth Vision.app"
+open "$DIR/AD-Depth Vision.app"
+CMD
+chmod +x "$SCRIPT_DIR/Start-AD-Depth-Vision.command"
 
 # Create Info.plist
 cat > "$CONTENTS_DIR/Info.plist" << 'PLIST'
@@ -124,7 +149,7 @@ echo "║  App created at:                             ║"
 echo "║  $INSTALL_DIR"
 echo "║                                              ║"
 echo "║  To run: Double-click 'AD-Depth Vision.app'  ║"
-echo "║  Or drag it to your Applications folder.     ║"
+echo "║  Or double-click 'Start-AD-Depth-Vision.command'║"
 echo "║                                              ║"
 echo "╚══════════════════════════════════════════════╝"
 echo ""
