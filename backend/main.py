@@ -5,9 +5,15 @@ from fastapi.staticfiles import StaticFiles
 import shutil
 import os
 import uuid
-from processor import DepthVideoProcessor, COLORMAP_OPTIONS
-from pose_processor import PoseVideoProcessor
-from three_d_processor import ThreeDWhiteCharacterProcessor
+
+COLORMAP_OPTIONS = {
+    "grayscale": None,
+    "turbo": "turbo",
+    "magma": "magma",
+    "inferno": "inferno",
+    "plasma": "plasma",
+    "viridis": "viridis",
+}
 
 app = FastAPI(title="AD-Depth Vision API")
 
@@ -26,7 +32,7 @@ os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 app.mount("/app", StaticFiles(directory="../frontend", html=True), name="frontend")
 
-# Lazy loading of processors
+# Lazy loaded AI processors (Instant server startup!)
 depth_processor = None
 pose_processor = None
 three_d_processor = None
@@ -79,14 +85,17 @@ def process_video_task(video_id: str, input_path: str, output_path: str, mode: s
     try:
         if mode == "pose":
             if not pose_processor:
+                from pose_processor import PoseVideoProcessor
                 pose_processor = PoseVideoProcessor()
             pose_processor.process_video(input_path, output_path, progress_callback=update_progress)
         elif mode == "3d_white":
             if not three_d_processor:
+                from three_d_processor import ThreeDWhiteCharacterProcessor
                 three_d_processor = ThreeDWhiteCharacterProcessor()
             three_d_processor.process_video(input_path, output_path, progress_callback=update_progress)
         else:
             if not depth_processor:
+                from processor import DepthVideoProcessor
                 depth_processor = DepthVideoProcessor()
             depth_processor.process_video(input_path, output_path, progress_callback=update_progress, colormap=colormap)
             

@@ -14,6 +14,9 @@ echo "============================================================"
 # Remove macOS Gatekeeper Quarantine flags automatically
 xattr -cr "$DIR" 2>/dev/null || true
 
+# Free port 8000 if previously occupied
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+
 # Check for Python 3
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python 3 is required. Please install Python 3 from https://www.python.org/downloads/"
@@ -31,8 +34,8 @@ if [ ! -f "backend/venv/bin/python" ] || ! "backend/venv/bin/python" -c "import 
     backend/venv/bin/pip install --default-timeout=1000 -r backend/requirements.txt
 fi
 
-# Open browser automatically
-(sleep 4 && open "http://127.0.0.1:8000/app/") &
+# Open browser automatically after short delay
+(sleep 2 && open "http://127.0.0.1:8000/app/") &
 
 # Start Backend Server
 source backend/venv/bin/activate
@@ -42,4 +45,4 @@ export PROCESSED_DIR="../processed"
 echo "🚀 AD-Depth Vision is running!"
 echo "👉 Open Web App at: http://127.0.0.1:8000/app/ or http://localhost:8000/app/"
 echo "============================================================"
-uvicorn main:app --host 127.0.0.1 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8000
