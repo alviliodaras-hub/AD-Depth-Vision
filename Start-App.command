@@ -8,7 +8,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
 echo "============================================================"
-echo "🔮 Starting AD-Depth Vision..."
+echo "🔮 Starting AD-Depth Vision Server..."
 echo "============================================================"
 
 # Remove macOS Gatekeeper Quarantine flags automatically
@@ -21,7 +21,7 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Set up local venv if not initialized or corrupted from transfer
+# Set up local venv if not initialized
 if [ ! -f "backend/venv/bin/python" ] || ! "backend/venv/bin/python" -c "import sys" 2>/dev/null; then
     echo "⚙️ Preparing local Python environment for this Mac..."
     rm -rf backend/venv
@@ -31,13 +31,15 @@ if [ ! -f "backend/venv/bin/python" ] || ! "backend/venv/bin/python" -c "import 
     backend/venv/bin/pip install --default-timeout=1000 -r backend/requirements.txt
 fi
 
-# Open browser automatically after 3 seconds
-(sleep 3 && open "http://127.0.0.1:8000/app/") &
+# Open browser automatically
+(sleep 4 && open "http://127.0.0.1:8000/app/") &
 
 # Start Backend Server
 source backend/venv/bin/activate
 cd backend
 export UPLOAD_DIR="../uploads"
 export PROCESSED_DIR="../processed"
-echo "🚀 Server started! Opening browser at http://127.0.0.1:8000/app/ ..."
+echo "🚀 AD-Depth Vision is running!"
+echo "👉 Open Web App at: http://127.0.0.1:8000/app/ or http://localhost:8000/app/"
+echo "============================================================"
 uvicorn main:app --host 127.0.0.1 --port 8000
