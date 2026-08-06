@@ -86,6 +86,10 @@ class DepthVideoProcessor:
         frame_count = 0
         start_time = time.monotonic()
 
+        # Temporal smoothing buffer (prevents frame-to-frame flickering)
+        prev_depth = None
+        temporal_weight = 0.7  # Current frame weight (0.7 current + 0.3 previous)
+
         with torch.no_grad():
             while cap.isOpened():
                 batch_pil = []
@@ -114,6 +118,12 @@ class DepthVideoProcessor:
                         depth_norm = (depth_array - d_min) / (d_max - d_min)
                     else:
                         depth_norm = np.zeros_like(depth_array)
+
+                    # ── Temporal Stabilization (anti-flicker) ──
+                    # Blend current frame with previous using exponential moving average
+                    if prev_depth is not None and prev_depth.shape == depth_norm.shape:
+                        depth_norm = temporal_weight * depth_norm + (1.0 - temporal_weight) * prev_depth
+                    prev_depth = depth_norm.copy()
 
                     # Convert to 8-bit unsigned integer (0-255)
                     depth_uint8 = (depth_norm * 255.0).astype("uint8")

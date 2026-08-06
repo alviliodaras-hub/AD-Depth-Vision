@@ -73,6 +73,10 @@ class ThreeDWhiteCharacterProcessor:
         L_fill = np.array([-0.5, 0.3, 0.6], dtype=np.float32)
         L_fill /= np.linalg.norm(L_fill)
 
+        # Temporal smoothing buffer (prevents frame-to-frame flickering)
+        prev_depth = None
+        temporal_weight = 0.7  # Current frame weight (0.7 current + 0.3 previous)
+
         with torch.no_grad():
             while cap.isOpened():
                 batch_pil = []
@@ -104,6 +108,11 @@ class ThreeDWhiteCharacterProcessor:
 
                     # Resize depth to target resolution
                     depth_norm = cv2.resize(depth_norm, (out_width, out_height), interpolation=cv2.INTER_CUBIC)
+
+                    # ── Temporal Stabilization (anti-flicker) ──
+                    if prev_depth is not None and prev_depth.shape == depth_norm.shape:
+                        depth_norm = temporal_weight * depth_norm + (1.0 - temporal_weight) * prev_depth
+                    prev_depth = depth_norm.copy()
 
                     # Smooth depth to produce clean 3D clay surfaces
                     depth_smooth = cv2.bilateralFilter(depth_norm, d=9, sigmaColor=0.1, sigmaSpace=9.0)
