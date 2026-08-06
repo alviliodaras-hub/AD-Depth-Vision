@@ -1,6 +1,6 @@
 # 🔮 AD-Depth Vision
 
-An AI-powered video conversion suite built for macOS. Transform 2D videos into 3D Depth Maps, Multi-Character Motion Pivots, or 3D White Clay Mannequin Renders with crisp cel-shaded outlines — running 100% locally on Apple Silicon (MPS Acceleration) and CUDA.
+An AI-powered video conversion suite built for macOS. Transform 2D videos into 3D Depth Maps, Multi-Character Motion Pivots, or 3D White Clay Mannequin Renders — running 100% locally on Apple Silicon (MPS Acceleration) and CUDA.
 
 ---
 
@@ -14,45 +14,38 @@ An AI-powered video conversion suite built for macOS. Transform 2D videos into 3
 
 ---
 
-## 💻 Cara Install & Menjalankan di macOS
+## 💻 Cara Install & Jalankan (macOS)
 
-### 🌟 Cara 1: Menggunakan Standalone App (`AD-Depth Vision.app`) — Tanpa Coding / Terminal
-
-1. Unduh / ekstraksikan file **`AD-Depth-Vision-Mac.zip`** atau clone folder ini.
-2. **Double-click** file **`AD-Depth Vision.app`**.
-3. Aplikasi dan browser di `http://127.0.0.1:8000/app/` akan otomatis terbuka dan siap digunakan!
-
-> 💡 **Tips macOS**: Jika muncul pesan *"App downloaded from internet"*, cukup **Klik Kanan `AD-Depth Vision.app` → pilih Open**.
-
----
-
-### 🛠️ Cara 2: Build dari Source (Terminal / Developer Mode)
-
-#### Prasyarat:
+### Prasyarat
 - macOS 11.0+ (Apple Silicon M1/M2/M3/M4 disarankan)
-- Python 3.9+
+- Python 3.9+ (sudah terinstal di kebanyakan Mac)
 
-#### Langkah-langkah:
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/alviliodaras-hub/AD-Depth-Vision.git
-   cd AD-Depth-Vision
-   ```
+### 🌟 Cara Tercepat: Download & Jalankan (1 Perintah)
 
-2. **Buat Bundle `.app` Portabel (Otomatis)**:
-   ```bash
-   bash install_mac.sh
-   ```
+Buka **Terminal** (⌘ + Space → ketik "Terminal") lalu paste perintah ini:
 
-3. **Atau Jalankan Manual Backend & Frontend**:
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   uvicorn main:app --reload --port 8000
-   ```
-   Buka browser di: **[http://127.0.0.1:8000/app/](http://127.0.0.1:8000/app/)**
+```bash
+curl -L https://github.com/alviliodaras-hub/AD-Depth-Vision/archive/main.zip -o app.zip && unzip -qo app.zip && cd AD-Depth-Vision-main && bash run.sh
+```
+
+### 🛠️ Atau Jika Sudah Punya Foldernya
+
+```bash
+cd /path/ke/folder/AD-Depth-Vision
+bash run.sh
+```
+
+### Apa yang terjadi saat menjalankan `bash run.sh`?
+
+1. ✅ Cek Python 3 di komputer Anda
+2. ⚙️ Buat virtual environment (hanya pertama kali)
+3. 📦 Install semua package AI yang dibutuhkan (hanya pertama kali)
+4. 🔍 Cari port yang tersedia (8000-8010)
+5. 🚀 Nyalakan server AI
+6. ❤️ Tunggu server siap (health-check)
+7. 🌐 Buka browser otomatis → **Aplikasi siap digunakan!**
+
+> **Tips**: Untuk menghentikan server, tekan `Ctrl+C` di Terminal.
 
 ---
 

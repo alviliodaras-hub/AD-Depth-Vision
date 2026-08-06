@@ -6,6 +6,10 @@ import shutil
 import os
 import uuid
 
+# Resolve paths relative to this script's directory (not CWD)
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_DIR = os.path.dirname(_BACKEND_DIR)
+
 COLORMAP_OPTIONS = {
     "grayscale": None,
     "turbo": "turbo",
@@ -25,12 +29,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "../uploads")
-PROCESSED_DIR = os.environ.get("PROCESSED_DIR", "../processed")
+UPLOAD_DIR = os.environ.get("UPLOAD_DIR", os.path.join(_PROJECT_DIR, "uploads"))
+PROCESSED_DIR = os.environ.get("PROCESSED_DIR", os.path.join(_PROJECT_DIR, "processed"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
-app.mount("/app", StaticFiles(directory="../frontend", html=True), name="frontend")
+_FRONTEND_DIR = os.path.join(_PROJECT_DIR, "frontend")
+app.mount("/app", StaticFiles(directory=_FRONTEND_DIR, html=True), name="frontend")
 
 # Lazy loaded AI processors (Instant server startup!)
 depth_processor = None
@@ -117,6 +122,10 @@ async def download_video(video_id: str):
     if os.path.exists(output_path):
         return FileResponse(output_path, media_type="video/mp4", filename=f"processed_{video_id}.mp4")
     return JSONResponse(status_code=404, content={"message": "Video not found or not processed yet"})
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.get("/")
 async def root():
