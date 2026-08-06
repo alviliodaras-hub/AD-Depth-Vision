@@ -128,6 +128,18 @@ class DepthVideoProcessor:
                         # 2. Bilateral filter for ultra-smooth surface with razor-sharp edges
                         depth_uint8 = cv2.bilateralFilter(depth_uint8, d=9, sigmaColor=50, sigmaSpace=50)
 
+                    # ── Glass Effect: Crystal-clear polished depth ──
+                    # 1. CLAHE — adaptive contrast for clearer depth separation
+                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                    depth_uint8 = clahe.apply(depth_uint8)
+
+                    # 2. Second bilateral pass — glass-smooth surface polish
+                    depth_uint8 = cv2.bilateralFilter(depth_uint8, d=7, sigmaColor=40, sigmaSpace=40)
+
+                    # 3. Unsharp Mask — razor-sharp edges like cut glass
+                    blur = cv2.GaussianBlur(depth_uint8, (0, 0), sigmaX=2.0)
+                    depth_uint8 = cv2.addWeighted(depth_uint8, 1.4, blur, -0.4, 0)
+
                     if is_color:
                         depth_out = cv2.applyColorMap(depth_uint8, cv_colormap)
                     else:
