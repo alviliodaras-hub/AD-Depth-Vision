@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Playground | AD-Depth Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="playground.css">
+    <!-- Three.js and Addons -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo">
+            <span class="logo-icon">🎮</span>
+            <h1>3D Playground</h1>
+        </div>
+        <div class="view-controls">
+            <button id="view-front" title="Front View (Numpad 1)">Front</button>
+            <button id="view-side" title="Side View (Numpad 3)">Side</button>
+            <button id="view-top" title="Top View (Numpad 7)">Top</button>
+            <button id="view-persp" class="active" title="Perspective (Numpad 5)">Persp</button>
+        </div>
+        <div class="header-actions">
+            <button id="export-json-btn" class="btn btn-secondary">💾 Export JSON</button>
+            <button id="screenshot-btn" class="btn btn-primary">📸 Screenshot</button>
+            <a href="index.html" class="btn btn-secondary">Back</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="toolbar">
+            <div class="tool-group">
+                <h3>Transform</h3>
+                <button class="tool-btn active" id="tool-select" title="Select (Q)"><span class="icon">👆</span> Select</button>
+                <button class="tool-btn" id="tool-translate" title="Move (G)"><span class="icon">↔️</span> Move</button>
+                <button class="tool-btn" id="tool-rotate" title="Rotate (R)"><span class="icon">🔄</span> Rotate</button>
+                <button class="tool-btn" id="tool-scale" title="Scale (S)"><span class="icon">↕️</span> Scale</button>
+            </div>
+            
+            <div class="tool-group">
+                <h3>Add Elements</h3>
+                <button class="tool-btn" id="add-box"><span class="icon">🟦</span> Box Prop</button>
+                <button class="tool-btn" id="add-cylinder"><span class="icon">🛢️</span> Cylinder</button>
+                <button class="tool-btn" id="add-plane"><span class="icon">🧱</span> Wall/Plane</button>
+                <button class="tool-btn" id="add-camera"><span class="icon">📷</span> Camera Marker</button>
+            </div>
+
+            <div class="tool-group" id="properties-panel" style="display: none;">
+                <h3>Properties</h3>
+                <label>Color: <input type="color" id="prop-color"></label>
+                <button class="tool-btn danger" id="delete-element" title="Delete (Del)"><span class="icon">🗑️</span> Delete</button>
+            </div>
+        </aside>
+
+        <div class="viewport-container" id="viewport">
+            <div id="loading-overlay">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <p>Loading 3D Scene Data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="timeline-bar">
+        <div class="playback-controls">
+            <button id="play-btn" title="Play/Pause (Space)"><span class="icon">▶️</span></button>
+        </div>
+        <div class="timeline-slider-container">
+            <input type="range" id="timeline-slider" min="0" max="100" value="0">
+        </div>
+        <div class="frame-counter">
+            <span id="current-frame">0</span> / <span id="total-frames">0</span>
+        </div>
+        <div class="timeline-actions">
+            <label class="toggle-lock" title="Lock pose and manipulate freely">
+                <input type="checkbox" id="lock-frame">
+                <span class="icon">🔒</span> Lock Frame
+            </label>
+        </div>
+    </footer>
+
+    <script type="module" src="playground.js"></script>
+</body>
+</html>

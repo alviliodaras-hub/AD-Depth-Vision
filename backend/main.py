@@ -41,6 +41,7 @@ app.mount("/app", StaticFiles(directory=_FRONTEND_DIR, html=True), name="fronten
 depth_processor = None
 pose_processor = None
 three_d_processor = None
+playground_processor = None
 
 processing_status = {}
 
@@ -64,7 +65,11 @@ async def upload_video(
     video_id = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1]
     input_path = os.path.join(UPLOAD_DIR, f"{video_id}{ext}")
-    output_path = os.path.join(PROCESSED_DIR, f"{video_id}.mp4")
+    
+    if mode == "playground":
+        output_path = os.path.join(PROCESSED_DIR, f"{video_id}.json")
+    else:
+        output_path = os.path.join(PROCESSED_DIR, f"{video_id}.mp4")
     
     with open(input_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -76,7 +81,7 @@ async def upload_video(
     return {"video_id": video_id, "status": "processing"}
 
 def process_video_task(video_id: str, input_path: str, output_path: str, mode: str = "depth", colormap: str = "grayscale"):
-    global depth_processor, pose_processor, three_d_processor
+    global depth_processor, pose_processor, three_d_processor, playground_processor
     
     def update_progress(current, total, **kwargs):
         processing_status[video_id] = {
@@ -98,6 +103,11 @@ def process_video_task(video_id: str, input_path: str, output_path: str, mode: s
                 from three_d_processor import ThreeDWhiteCharacterProcessor
                 three_d_processor = ThreeDWhiteCharacterProcessor()
             three_d_processor.process_video(input_path, output_path, progress_callback=update_progress)
+        elif mode == "playground":
+            if not playground_processor:
+                from playground_processor import PlaygroundProcessor
+                playground_processor = PlaygroundProcessor()
+            playground_processor.process_video(input_path, output_path, progress_callback=update_progress)
         else:
             if not depth_processor:
                 from processor import DepthVideoProcessor
@@ -122,6 +132,13 @@ async def download_video(video_id: str):
     if os.path.exists(output_path):
         return FileResponse(output_path, media_type="video/mp4", filename=f"processed_{video_id}.mp4")
     return JSONResponse(status_code=404, content={"message": "Video not found or not processed yet"})
+
+@app.get("/scene/{video_id}")
+async def get_scene(video_id: str):
+    output_path = os.path.join(PROCESSED_DIR, f"{video_id}.json")
+    if os.path.exists(output_path):
+        return FileResponse(output_path, media_type="application/json")
+    return JSONResponse(status_code=404, content={"message": "Scene data not found or not processed yet"})
 
 @app.get("/health")
 async def health_check():

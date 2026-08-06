@@ -60,8 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
     function getModeLabel(mode) {
-        if (mode === 'pose') return 'Multi-Character Motion Pivot';
+        if (mode === 'pose') return 'Character Motion Pivot';
         if (mode === '3d_white') return '3D White Character';
+        if (mode === 'playground') return '3D Playground Extraction';
         return 'Depth Map';
     }
 
@@ -140,6 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showResults() {
+        if (selectedMode === 'playground') {
+            window.location.href = `playground.html?id=${currentVideoId}`;
+            return;
+        }
+
         processingSection.classList.add('hidden');
         resultsSection.classList.remove('hidden');
 
