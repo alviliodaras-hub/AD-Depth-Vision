@@ -2,12 +2,22 @@ import os
 import sys
 import threading
 import time
+import socket
+import subprocess
+
+def get_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('', 0))
+        return s.getsockname()[1]
+
+PORT = get_free_port()
 
 def start_backend():
     try:
         import uvicorn
         from main import app
-        uvicorn.run(app, host="127.0.0.1", port=8000, log_level="error")
+        print(f"✅ Starting server on 127.0.0.1:{PORT}")
+        uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="error")
     except Exception as e:
         print(f"❌ Backend server error: {e}")
         import traceback
@@ -31,10 +41,16 @@ if __name__ == "__main__":
 
     try:
         import webview
-        print("🖥️  Opening Native Mac Desktop Window...")
+    except ImportError:
+        print("💡 pywebview not installed. Installing native window package...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pywebview"])
+        import webview
+
+    try:
+        print(f"🖥️  Opening Native Mac Desktop Window on port {PORT}...")
         webview.create_window(
             "AD-Depth Vision",
-            "http://127.0.0.1:8000/app/",
+            f"http://127.0.0.1:{PORT}/app/",
             width=1280,
             height=850,
             resizable=True,

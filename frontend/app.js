@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('status-text');
     const progressDetail = document.getElementById('progress-detail');
 
-    const API_URL = 'http://127.0.0.1:8000';
+    const API_URL = window.location.origin;
     let currentVideoId = null;
     let pollInterval = null;
     let selectedMode = 'depth';
