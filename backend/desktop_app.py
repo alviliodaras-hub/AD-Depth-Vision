@@ -82,7 +82,7 @@ if __name__ == "__main__":
         print(f"🖥️  Opening Native Mac Desktop Window...")
         webview.create_window(
             "AD-Depth Vision",
-            f"http://127.0.0.1:{port}/app/",
+            f"http://127.0.0.1:{port}/app/?_t={int(time.time())}",
             width=1280,
             height=850,
             resizable=True,
