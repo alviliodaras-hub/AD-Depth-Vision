@@ -81,9 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function uploadVideo(file) {
         const formData = new FormData();
-        formData.append('file', file);
         formData.append('mode', selectedMode);
         formData.append('colormap', selectedColormap);
+        formData.append('file', file);
 
         try {
             const response = await fetch(`${API_URL}/upload`, { method: 'POST', body: formData });
