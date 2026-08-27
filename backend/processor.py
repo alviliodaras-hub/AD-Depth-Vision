@@ -5,6 +5,7 @@ from PIL import Image
 from transformers import pipeline
 import os
 import time
+from faststart import faststart_mp4
 
 COLORMAP_OPTIONS = {
     "grayscale": None,
@@ -30,7 +31,7 @@ class DepthVideoProcessor:
         print("Depth Anything V2 loaded successfully.")
 
     @torch.inference_mode()
-    def process_video(self, input_path: str, output_path: str, progress_callback=None, colormap="grayscale", denoise=True):
+    def process_video(self, input_path: str, output_path: str, progress_callback=None, colormap="grayscale", denoise=True, safe_mode="none"):
         cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
             raise ValueError(f"Error opening video file {input_path}")
@@ -71,14 +72,25 @@ class DepthVideoProcessor:
         cv_colormap = COLORMAP_OPTIONS.get(colormap, None)
         is_color = cv_colormap is not None
 
-        # Use H.264 codec for browser compatibility, fallback to mp4v
+        vid_out_width = out_width
+        vid_out_height = out_height
+        if safe_mode == "side_by_side":
+            vid_out_width = out_width * 2
+        elif safe_mode == "border":
+            vid_out_height = out_height + 80
+            
+        # Ensure dimensions are even for H.264 codec
+        vid_out_width = vid_out_width - (vid_out_width % 2)
+        vid_out_height = vid_out_height - (vid_out_height % 2)
+
+        # Use VP9 codec for WebM to ensure browser playback without faststart/moov issues
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
-        out = cv2.VideoWriter(output_path, fourcc, fps, (out_width, out_height), isColor=True)
+        out = cv2.VideoWriter(output_path, fourcc, fps, (vid_out_width, vid_out_height), isColor=True)
         if not out.isOpened():
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_path, fourcc, fps, (out_width, out_height), isColor=True)
+            out = cv2.VideoWriter(output_path, fourcc, fps, (vid_out_width, vid_out_height), isColor=True)
 
-        print(f"Processing {total_frames} frames | V2 Model input: {model_width}x{model_height} | Output: {out_width}x{out_height} | Colormap: {colormap}")
+        print(f"Processing {total_frames} frames | V2 Model input: {model_width}x{model_height} | Output: {out_width}x{out_height} | Colormap: {colormap} | Safe Mode: {safe_mode}")
         if progress_callback:
             progress_callback(0, total_frames, elapsed_seconds=0.0, eta_seconds=0.0)
 
@@ -93,10 +105,13 @@ class DepthVideoProcessor:
         with torch.no_grad():
             while cap.isOpened():
                 batch_pil = []
+                batch_originals = []
                 for _ in range(batch_size):
                     ret, frame = cap.read()
                     if not ret:
                         break
+                    if safe_mode == "side_by_side":
+                        batch_originals.append(frame)
                     frame_resized = cv2.resize(frame, (model_width, model_height))
                     image_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
                     pil_image = Image.fromarray(image_rgb)
@@ -107,7 +122,7 @@ class DepthVideoProcessor:
 
                 results = self.pipe(batch_pil, batch_size=batch_size)
 
-                for result in results:
+                for idx, result in enumerate(results):
                     depth_map = result["depth"]
                     depth_array = np.array(depth_map, dtype=np.float32)
 
@@ -155,6 +170,62 @@ class DepthVideoProcessor:
                     else:
                         depth_out = cv2.cvtColor(depth_uint8, cv2.COLOR_GRAY2BGR)
 
+                    if safe_mode == "side_by_side":
+                        original = batch_originals[idx]
+                        original_resized = cv2.resize(original, (out_width, out_height))
+                        frame_out = np.hstack([original_resized, depth_out])
+                        cv2.line(frame_out, (out_width, 0), (out_width, out_height), (255, 255, 255), 2)
+                        cv2.putText(frame_out, "ORIGINAL", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        cv2.putText(frame_out, "DEPTH MAP", (out_width + 10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        depth_out = frame_out
+
+                    elif safe_mode == "overlay":
+                        grid_overlay = np.zeros_like(depth_out)
+                        for x in range(0, out_width, 80):
+                            cv2.line(grid_overlay, (x, 0), (x, out_height), (255, 255, 255), 1)
+                        for y in range(0, out_height, 80):
+                            cv2.line(grid_overlay, (0, y), (out_width, y), (255, 255, 255), 1)
+                        depth_out = cv2.addWeighted(depth_out, 0.85, grid_overlay, 0.15, 0)
+                        
+                        legend_w, legend_h = 150, 15
+                        x_offset = out_width - legend_w - 20
+                        y_offset = out_height - legend_h - 20
+                        gradient = np.linspace(0, 255, legend_w, dtype=np.uint8)
+                        gradient = np.tile(gradient, (legend_h, 1))
+                        if is_color:
+                            gradient_color = cv2.applyColorMap(gradient, cv_colormap)
+                        else:
+                            gradient_color = cv2.cvtColor(gradient, cv2.COLOR_GRAY2BGR)
+                        depth_out[y_offset:y_offset+legend_h, x_offset:x_offset+legend_w] = gradient_color
+                        cv2.putText(depth_out, "Near", (x_offset, y_offset - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                        cv2.putText(depth_out, "Far", (x_offset + legend_w - 25, y_offset - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                        
+                        cv2.putText(depth_out, "DEPTH MAP", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                        cv2.putText(depth_out, f"F: {frame_count:04d}", (out_width - 80, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                    elif safe_mode == "border":
+                        depth_out = cv2.copyMakeBorder(depth_out, 40, 40, 0, 0, cv2.BORDER_CONSTANT, value=(0,0,0))
+                        top_text = f"DEPTH MAP • {out_width}x{out_height} • {fps:.0f}fps • {colormap}"
+                        bottom_text = "AI Depth Estimation • Depth Anything V2"
+                        top_size, _ = cv2.getTextSize(top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
+                        bottom_size, _ = cv2.getTextSize(bottom_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
+                        cv2.putText(depth_out, top_text, ((out_width - top_size[0]) // 2, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                        cv2.putText(depth_out, bottom_text, ((out_width - bottom_size[0]) // 2, out_height + 40 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                    if depth_out.shape[1] != vid_out_width or depth_out.shape[0] != vid_out_height:
+                        depth_out = cv2.resize(depth_out, (vid_out_width, vid_out_height))
+
+                    # Add running timer / timestamp (Record indicator)
+                    time_sec = frame_count / fps
+                    mins = int(time_sec // 60)
+                    secs = int(time_sec % 60)
+                    msecs = int((time_sec % 1) * 1000)
+                    timer_str = f"REC {mins:02d}:{secs:02d}.{msecs:03d}"
+                    
+                    cv2.circle(depth_out, (30, vid_out_height - 30), 6, (0, 0, 255), -1)
+                    cv2.putText(depth_out, timer_str, (45, vid_out_height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 3, cv2.LINE_AA)
+                    cv2.putText(depth_out, timer_str, (45, vid_out_height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+
                     out.write(depth_out)
                     frame_count += 1
 
@@ -176,6 +247,9 @@ class DepthVideoProcessor:
 
         cap.release()
         out.release()
+
+        # Move moov atom to beginning for browser streaming
+        faststart_mp4(output_path)
 
         # Free MPS memory if applicable
         if self.device == 'mps':

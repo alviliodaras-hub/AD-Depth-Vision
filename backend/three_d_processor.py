@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from transformers import pipeline
 import time
+from faststart import faststart_mp4
 
 class ThreeDWhiteCharacterProcessor:
     def __init__(self, model_name="depth-anything/Depth-Anything-V2-Small-hf"):
@@ -17,7 +18,7 @@ class ThreeDWhiteCharacterProcessor:
         )
         print("Model loaded successfully.")
 
-    def process_video(self, input_path: str, output_path: str, progress_callback=None):
+    def process_video(self, input_path: str, output_path: str, progress_callback=None, safe_mode="none"):
         cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
             raise ValueError(f"Error opening video file {input_path}")
@@ -51,10 +52,25 @@ class ThreeDWhiteCharacterProcessor:
         out_width = out_width - (out_width % 16)
         out_height = out_height - (out_height % 16)
 
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_path, fourcc, fps, (out_width, out_height), isColor=True)
+        vid_out_width = out_width
+        vid_out_height = out_height
+        if safe_mode == "side_by_side":
+            vid_out_width = out_width * 2
+        elif safe_mode == "border":
+            vid_out_height = out_height + 80
+            
+        # Ensure dimensions are even for H.264 codec
+        vid_out_width = vid_out_width - (vid_out_width % 2)
+        vid_out_height = vid_out_height - (vid_out_height % 2)
 
-        print(f"Processing 3D White Character: {total_frames} frames from {width}x{height} to {out_width}x{out_height}...")
+        # Use VP9 codec for WebM to ensure browser playback without faststart/moov issues
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (vid_out_width, vid_out_height), isColor=True)
+        if not out.isOpened():
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_path, fourcc, fps, (vid_out_width, vid_out_height), isColor=True)
+
+        print(f"Processing 3D White Character: {total_frames} frames from {width}x{height} to {out_width}x{out_height} | Safe Mode: {safe_mode}")
         
         if progress_callback:
             progress_callback(0, total_frames, elapsed_seconds=0.0, eta_seconds=0.0)
@@ -80,10 +96,13 @@ class ThreeDWhiteCharacterProcessor:
         with torch.no_grad():
             while cap.isOpened():
                 batch_pil = []
+                batch_originals = []
                 for _ in range(batch_size):
                     ret, frame = cap.read()
                     if not ret:
                         break
+                    if safe_mode == "side_by_side":
+                        batch_originals.append(frame)
                     frame_resized = cv2.resize(frame, (model_width, model_height))
                     image_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
                     pil_image = Image.fromarray(image_rgb)
@@ -94,7 +113,7 @@ class ThreeDWhiteCharacterProcessor:
 
                 results = self.pipe(batch_pil, batch_size=batch_size)
 
-                for result in results:
+                for idx, result in enumerate(results):
                     depth_map = result["depth"]
                     depth_raw = np.array(depth_map, dtype=np.float32)
 
@@ -182,6 +201,49 @@ class ThreeDWhiteCharacterProcessor:
                     bg_color = np.array([45, 45, 45], dtype=np.uint8) # Dark grey background
                     frame_out = np.where(mask_3ch > 0.5, frame_clay, bg_color).astype(np.uint8)
 
+                    if safe_mode == "side_by_side":
+                        original = batch_originals[idx]
+                        original_resized = cv2.resize(original, (out_width, out_height))
+                        f_out = np.hstack([original_resized, frame_out])
+                        cv2.line(f_out, (out_width, 0), (out_width, out_height), (255, 255, 255), 2)
+                        cv2.putText(f_out, "ORIGINAL", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        cv2.putText(f_out, "3D WHITE CHARACTER", (out_width + 10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        frame_out = f_out
+
+                    elif safe_mode == "overlay":
+                        grid_overlay = np.zeros_like(frame_out)
+                        for x in range(0, out_width, 80):
+                            cv2.line(grid_overlay, (x, 0), (x, out_height), (255, 255, 255), 1)
+                        for y in range(0, out_height, 80):
+                            cv2.line(grid_overlay, (0, y), (out_width, y), (255, 255, 255), 1)
+                        frame_out = cv2.addWeighted(frame_out, 0.85, grid_overlay, 0.15, 0)
+                        
+                        cv2.putText(frame_out, "3D WHITE CHARACTER", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+                        cv2.putText(frame_out, f"F: {frame_count:04d}", (out_width - 80, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                    elif safe_mode == "border":
+                        frame_out = cv2.copyMakeBorder(frame_out, 40, 40, 0, 0, cv2.BORDER_CONSTANT, value=(0,0,0))
+                        top_text = f"3D WHITE CHARACTER • {out_width}x{out_height} • {fps:.0f}fps"
+                        bottom_text = "AI 3D Surface Rendering • Depth Anything V2"
+                        top_size, _ = cv2.getTextSize(top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
+                        bottom_size, _ = cv2.getTextSize(bottom_text, cv2.FONT_HERSHEY_SIMPLEX, 0.4, 1)
+                        cv2.putText(frame_out, top_text, ((out_width - top_size[0]) // 2, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                        cv2.putText(frame_out, bottom_text, ((out_width - bottom_size[0]) // 2, out_height + 40 + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+
+                    if frame_out.shape[1] != vid_out_width or frame_out.shape[0] != vid_out_height:
+                        frame_out = cv2.resize(frame_out, (vid_out_width, vid_out_height))
+
+                    # Add running timer / timestamp (Record indicator)
+                    time_sec = frame_count / fps
+                    mins = int(time_sec // 60)
+                    secs = int(time_sec % 60)
+                    msecs = int((time_sec % 1) * 1000)
+                    timer_str = f"REC {mins:02d}:{secs:02d}.{msecs:03d}"
+                    
+                    cv2.circle(frame_out, (30, vid_out_height - 30), 6, (0, 0, 255), -1)
+                    cv2.putText(frame_out, timer_str, (45, vid_out_height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 3, cv2.LINE_AA)
+                    cv2.putText(frame_out, timer_str, (45, vid_out_height - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+
                     out.write(frame_out)
                     frame_count += 1
 
@@ -202,6 +264,9 @@ class ThreeDWhiteCharacterProcessor:
 
         cap.release()
         out.release()
+
+        # Move moov atom to beginning for browser streaming
+        faststart_mp4(output_path)
         
         if self.device == 'mps':
             torch.mps.empty_cache()

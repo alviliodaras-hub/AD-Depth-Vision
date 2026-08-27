@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import time
+from faststart import faststart_mp4
 
 # Skeleton connections (COCO format: 17 keypoints)
 SKELETON = [
@@ -68,7 +69,7 @@ class PoseVideoProcessor:
         out_width = out_width - (out_width % 2)
         out_height = out_height - (out_height % 2)
 
-        # Video writer
+        # Use VP9 codec for WebM to ensure browser playback without faststart/moov issues
         fourcc = cv2.VideoWriter_fourcc(*'avc1')
         out = cv2.VideoWriter(output_path, fourcc, fps, (out_width, out_height), isColor=True)
         if not out.isOpened():
@@ -168,6 +169,9 @@ class PoseVideoProcessor:
 
         cap.release()
         out.release()
+
+        # Move moov atom to beginning for browser streaming
+        faststart_mp4(output_path)
 
         elapsed_total = time.monotonic() - start_time
         print(f"Finished pose processing in {elapsed_total:.1f}s. Saved to {output_path}")

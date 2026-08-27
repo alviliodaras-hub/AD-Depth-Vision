@@ -113,9 +113,19 @@ export AD_DEPTH_PORT="$PORT"
 
 # Start uvicorn in background
 cd "$BACKEND_DIR"
+
+# Generate self-signed SSL cert if it doesn't exist (Required for Mobile Gyroscope API)
+if [ ! -f "key.pem" ] || [ ! -f "cert.pem" ]; then
+    echo -e "${YELLOW}  Generating local SSL certificate for V-Cam (HTTPS)...${NC}"
+    openssl req -x509 -newkey rsa:4096 -nodes -out cert.pem -keyout key.pem -days 365 -subj "/CN=127.0.0.1" 2>/dev/null
+fi
+
 "$VENV_PYTHON" -m uvicorn main:app \
-    --host 127.0.0.1 \
+    --host 0.0.0.0 \
     --port "$PORT" \
+    --ssl-keyfile key.pem \
+    --ssl-certfile cert.pem \
+    --reload \
     --log-level warning &
 SERVER_PID=$!
 
@@ -151,7 +161,8 @@ while [ "$WAITED" -lt "$MAX_WAIT" ]; do
     fi
 
     # Try to reach the health endpoint
-    if curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+    HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" "https://127.0.0.1:$PORT/health" || true)
+    if [ "$HTTP_CODE" = "200" ]; then
         SERVER_READY=true
         break
     fi
@@ -172,7 +183,7 @@ fi
 echo -e "${GREEN}  ✅ Server is live and responding!${NC}"
 
 # ── Step 7: Open browser ────────────────────────────────────
-APP_URL="http://127.0.0.1:$PORT/app/"
+APP_URL="https://127.0.0.1:$PORT/app/"
 echo -e "${YELLOW}[7/7]${NC} Opening app in browser..."
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════╗${NC}"

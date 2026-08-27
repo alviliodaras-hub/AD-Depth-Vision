@@ -1,6 +1,6 @@
 # 🔮 AD-Depth Vision
 
-An AI-powered video conversion suite built for macOS. Transform 2D videos into 3D Depth Maps, Multi-Character Motion Pivots, or 3D White Clay Mannequin Renders — running 100% locally on Apple Silicon (MPS Acceleration) and CUDA.
+An AI-powered video conversion and storyboard suite built for macOS. Transform 2D videos into 3D Depth Maps, 3D White Clay Mannequin Renders, Interactive 3D Playgrounds, Top-Down Blocking animatics, and Cinematic Midframe Storyboards.
 
 ---
 
@@ -8,9 +8,12 @@ An AI-powered video conversion suite built for macOS. Transform 2D videos into 3
 
 | Feature | Description | Key Tech |
 |---|---|---|
-| 🗺️ **3D Spatial Depth Map** | Converts 2D videos to high-definition 720p depth maps. Includes 6 colormaps (**Grayscale, Turbo Rainbow, Magma, Inferno, Plasma, Viridis**) with dual-stage edge-preserving denoising. | Depth Anything V2 |
-| 🕺 **Character Motion Pivot** | Multi-character skeleton keypoint tracking (**> 3 people in frame**) with real-time person counting & colored bone joints. | YOLOv8 Pose |
+| 🗺️ **3D Spatial Depth Map** | Converts 2D videos to high-definition depth maps. Includes 6 colormaps (**Grayscale, Turbo Rainbow, Magma, Inferno, Plasma, Viridis**) with dual-stage edge-preserving denoising. | Depth Anything V2 |
 | 🗿 **3D White Character** | Converts video subjects into 3D untextured white clay mannequin figures with Phong 3D surface shading and sharp ink contour border outlines. | Depth Anything V2 + Sobel 3D Normals |
+| 🎥 **Top-Down Blocking** | Simulate set blocking & animatic from top-view with timeline playback. | Canvas Blocking Engine |
+| 🎮 **3D Playground** | Interactive 3D previz & blocking scene with virtual camera control. | Three.js Spatial Previz |
+| 🎬 **Autocut Midframe** | Automatic scene shot detection, midpoint frame extraction, shot numbering (`001`, `002`), timecode stamping (`00:00:xx.xxx`), and seamless storyboard grid assembly. | PySceneDetect + OpenCV |
+| ⚡ **SceneFlow Studio** | Screenplay-to-video automatic audio alignment (speech detection & forced alignment), real-time glowing cue highlight, 8 color-coded badges, interactive timecode editor, and JSON export. | SceneFlow Engine + PyAV Audio VAD |
 
 ---
 

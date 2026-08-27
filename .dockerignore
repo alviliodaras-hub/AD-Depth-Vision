@@ -1,0 +1,10 @@
+venv/
+backend/venv/
+.env
+uploads/
+processed/
+__pycache__/
+*.pyc
+.git/
+.DS_Store
+AD-Depth Vision.app/

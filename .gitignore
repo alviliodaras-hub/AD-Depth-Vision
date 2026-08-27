@@ -1,32 +1,49 @@
-# Python / Virtual Environment
 venv/
 backend/venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Mac App Bundle & OS junk
-*.app/
-*.zip
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Uploads & Processed Video Files
+.env
 uploads/
 processed/
-*.mp4
-*.avi
-*.mov
+__pycache__/
+*.pyc
+.DS_Store
+AD-Depth Vision.app/
 
-# AI Models & Cache
-*.pt
-*.bin
-*.onnx
-.huggingface/
+# SSL Certificates (auto-generated)
+backend/cert.pem
+backend/key.pem
 
-# IDE & Temp
-.vscode/
-.idea/
-scratch/
+# Large model weights (download separately)
+backend/yolov8m-pose.pt
+
+# Large binary/zip files
+*.zip
+
+# Log files
+*.log
+server.log
+
+# Test media files
+test.mp4
+test.webm
+backend/test.webm
+backend/test2.webm
+
+# Root test/utility scripts (not part of app)
+test_backend.py
+test_gemini.py
+test_image_gen.py
+test_image_gen2.py
+test_image_gen3.py
+test_text.py
+test_upload.py
+list_models.py
+convert_sketch.py
+
+# Backend test scripts
+backend/test_api_dramaclaw.py
+backend/test_autocut_overlay.py
+backend/test_av.py
+backend/test_dramaclaw.py
+backend/test_sceneflow.py
+backend/test_sketch_algo.py
+backend/test_sketch_api.py

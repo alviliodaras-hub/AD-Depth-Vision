@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD Storyboard Sketch Studio | Pure AI Redraw & Lineart</title>
+    <meta name="description" content="Convert real images into hand-drawn storyboard sketches, pure AI redrawing, and clean comic lineart.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css?v=15">
+    <style>
+        .sketch-container {
+            max-width: 1240px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .sketch-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .nav-back-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        .sketch-grid {
+            display: grid;
+            grid-template-columns: 390px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        @media (max-width: 990px) {
+            .sketch-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .control-panel {
+            background: rgba(20, 20, 28, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .mode-toggle-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+        .mode-toggle-btn {
+            padding: 0.65rem 0.5rem;
+            border-radius: 9px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+        .mode-toggle-btn.active {
+            background: var(--primary-color);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+        }
+        .panel-section-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent-color);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .input-with-btn {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .input-text {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .input-text:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+        }
+        .btn-small {
+            padding: 0.65rem 0.9rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            border-radius: 10px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-small:hover {
+            background: var(--primary-color);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+        }
+        /* Connection Status Badge */
+        .conn-status-badge {
+            margin-top: 0.5rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+        }
+        .conn-status-badge.success {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #34d399;
+        }
+        .conn-status-badge.error {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #f87171;
+        }
+        .conn-status-badge.testing {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fbbf24;
+        }
+        .conn-status-badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #f59e0b;
+        }
+        .style-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+        }
+        .style-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.3rem;
+            user-select: none;
+        }
+        .style-card:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+        .style-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        .style-card .icon {
+            font-size: 1.3rem;
+        }
+        .style-card .title {
+            font-weight: 600;
+            font-size: 0.84rem;
+            color: var(--text-primary);
+        }
+        .style-card .desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            line-height: 1.25;
+        }
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .slider-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+        .slider-header span:last-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .styled-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .styled-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-color);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .action-btn {
+            padding: 0.9rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), #818cf8);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .download-btn:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        /* Workspace Panel */
+        .workspace-panel {
+            background: rgba(20, 20, 28, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 580px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        .upload-dropzone {
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            background: rgba(99, 102, 241, 0.03);
+            border-radius: 14px;
+            padding: 3.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.08);
+            transform: scale(1.01);
+        }
+        .dropzone-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+        }
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+        .view-mode-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+        .view-tab {
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .view-tab.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+        /* Split comparison */
+        .split-view-container {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: #09090e;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            user-select: none;
+        }
+        .split-image-before, .split-image-after {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .split-image-before img, .split-image-after img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        .split-image-before {
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+        }
+        .split-divider {
+            position: absolute;
+            top: 0; bottom: 0; left: 50%;
+            width: 3px;
+            background: #ffffff;
+            cursor: ew-resize;
+            box-shadow: 0 0 12px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+        .split-handle {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        }
+        .split-label {
+            position: absolute;
+            bottom: 12px;
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: white;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .label-left { left: 12px; }
+        .label-right { right: 12px; }
+
+        /* Side by side */
+        .side-view-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+        }
+        .side-card {
+            background: #09090e;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .side-card-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        .side-card img {
+            width: 100%;
+            height: 380px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .image-viewer {
+            width: 100%;
+            min-height: 400px;
+            max-height: 520px;
+            background: #09090e;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .image-viewer img {
+            max-width: 100%;
+            max-height: 520px;
+            object-fit: contain;
+        }
+
+        /* Error / Notice Banner */
+        .error-notice-card {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .error-notice-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #f87171;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .error-notice-text {
+            font-size: 0.83rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* AI Analysis Card */
+        .analysis-card {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .analysis-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .analysis-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Collapsible AI Settings */
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+        .collapsible-content {
+            display: none;
+            padding-top: 1rem;
+        }
+        .collapsible-content.open {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: rgba(40, 40, 40, 0.95);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            transition: opacity 0.3s, transform 0.3s;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+    <div class="background-mesh"></div>
+
+    <div class="sketch-container">
+        <!-- Header -->
+        <header class="sketch-header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <img src="logo.png" alt="Logo" style="width: 44px; height: 44px; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));">
+                <div>
+                    <h1 style="font-size: 1.5rem; font-weight: 700; margin: 0;">Storyboard Sketch Studio</h1>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Convert photos into hand-drawn storyboard sketches via Pure AI Redraw or Lineart Synthesis</p>
+                </div>
+            </div>
+            <a href="/app/" class="nav-back-btn">
+                <span>←</span> Back to Main App
+            </a>
+        </header>
+
+        <!-- Main Studio Grid -->
+        <div class="sketch-grid">
+            <!-- Left Control Panel -->
+            <div class="control-panel">
+                <div>
+                    <div class="panel-section-title">
+                        <span>🎨</span> Sketch Style
+                    </div>
+                    <div class="style-options">
+                        <div class="style-card selected" data-style="pure_outline">
+                            <span class="icon">✒️</span>
+                            <span class="title">Pure Outline</span>
+                            <span class="desc">Line art bersih tanpa shading</span>
+                        </div>
+                        <div class="style-card" data-style="rough_graphite">
+                            <span class="icon">✏️</span>
+                            <span class="title">Rough Graphite</span>
+                            <span class="desc">Sketsa pensil</span>
+                        </div>
+                        <div class="style-card" data-style="film_charcoal">
+                            <span class="icon">🎬</span>
+                            <span class="title">Film Charcoal</span>
+                            <span class="desc">Arang dramatis</span>
+                        </div>
+                        <div class="style-card" data-style="clean_ink">
+                            <span class="icon">🖋️</span>
+                            <span class="title">Clean Ink</span>
+                            <span class="desc">Lineart komik/manga</span>
+                        </div>
+                        <div class="style-card" data-style="concept_wash">
+                            <span class="icon">🎨</span>
+                            <span class="title">Concept Wash</span>
+                            <span class="desc">Cat air</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Settings Collapsible -->
+                <div>
+                    <div class="collapsible-header" id="ai-settings-header">
+                        <span>⚙️ AI Settings (Optional)</span>
+                        <span id="ai-settings-icon">▼</span>
+                    </div>
+                    <div class="collapsible-content" id="ai-settings-content">
+                        <div>
+                            <div class="panel-section-title">
+                                <span>🔑</span> Gemini API Key
+                            </div>
+                            <div class="input-with-btn">
+                                <input type="password" id="input-api-key" class="input-text" placeholder="AIzaSy... (Saved locally)">
+                                <button id="btn-save-key" class="btn-small" title="Save API Key">
+                                    <span>💾</span> Save
+                                </button>
+                            </div>
+                            <div id="conn-status" class="conn-status-badge hidden"></div>
+                        </div>
+                        <div>
+                            <div class="panel-section-title">
+                                <span>📝</span> Custom Instructions
+                            </div>
+                            <input type="text" id="input-custom-prompt" class="input-text" placeholder="e.g. tanpa shading, high drama">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Local Details -->
+                <div>
+                    <div class="panel-section-title">
+                        <span>🎛️</span> Local Details (Fallback)
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>Line Weight</span>
+                                <span id="val-lineweight">1.0x</span>
+                            </div>
+                            <input type="range" id="slider-lineweight" class="styled-slider" min="0.5" max="2.5" step="0.1" value="1.0">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-header">
+                                <span>Shading Darkness</span>
+                                <span id="val-shading">0.0x</span>
+                            </div>
+                            <input type="range" id="slider-shading" class="styled-slider" min="0.0" max="2.0" step="0.1" value="0.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button id="btn-convert" class="action-btn" disabled>
+                        <span>✨</span> Generate Storyboard Sketch
+                    </button>
+                    <button id="btn-download" class="action-btn download-btn hidden">
+                        <span>💾</span> Download High-Res Sketch
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Workspace / Preview Panel -->
+            <div class="workspace-panel">
+
+
+                <!-- Dropzone (Initial state) -->
+                <div id="dropzone" class="upload-dropzone">
+                    <div class="dropzone-icon">🖼️</div>
+                    <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Drag & Drop Reference Photo</h2>
+                    <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0;">or click to browse from files (or Ctrl/Cmd+V to paste)</p>
+                    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem;">Supports JPG, PNG, WEBP (Portraits, Landscapes, Film Stills)</p>
+                    <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp" hidden>
+                </div>
+
+                <!-- Preview Area -->
+                <div id="preview-area" class="preview-area hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="view-mode-tabs">
+                            <button class="view-tab active" data-view="split">Split Slider</button>
+                            <button class="view-tab" data-view="side">Side by Side</button>
+                            <button class="view-tab" data-view="sketch">Sketch Only</button>
+                        </div>
+                        <button id="btn-change-image" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.35rem 0.8rem; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
+                            🔄 Change Image
+                        </button>
+                    </div>
+
+                    <!-- Split View -->
+                    <div id="view-split" class="split-view-container">
+                        <div class="split-image-after">
+                            <img id="img-sketch-split" src="" alt="Sketch">
+                            <span class="split-label label-right">STORYBOARD SKETCH</span>
+                        </div>
+                        <div class="split-image-before" id="split-before-layer">
+                            <img id="img-orig-split" src="" alt="Original">
+                            <span class="split-label label-left">ORIGINAL REFERENCE</span>
+                        </div>
+                        <div class="split-divider" id="split-divider">
+                            <div class="split-handle">⇄</div>
+                        </div>
+                    </div>
+
+                    <!-- Side by Side View -->
+                    <div id="view-side" class="side-view-container hidden">
+                        <div class="side-card">
+                            <span class="side-card-title">Original Reference</span>
+                            <img id="img-orig-side" src="" alt="Original">
+                        </div>
+                        <div class="side-card">
+                            <span class="side-card-title">Storyboard Sketch</span>
+                            <img id="img-sketch-side" src="" alt="Sketch">
+                        </div>
+                    </div>
+
+                    <!-- Sketch Only View -->
+                    <div id="view-sketch" class="image-viewer hidden">
+                        <img id="img-sketch-single" src="" alt="Sketch">
+                    </div>
+
+                    <!-- AI Scene Analysis Box (Shown for AI redraw) -->
+                    <div id="ai-analysis-card" class="analysis-card hidden">
+                        <span class="analysis-title"><span>🎬</span> AI Scene & Shot Composition Analysis:</span>
+                        <p id="ai-analysis-text" class="analysis-text"></p>
+                    </div>
+                </div>
+
+                <!-- Loading State Overlay -->
+                <div id="loading-overlay" class="hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 4rem 2rem;">
+                    <div class="spinner"></div>
+                    <p id="loading-title" style="font-weight: 600; font-size: 1rem; color: var(--text-primary);">AI is Re-drawing your Storyboard...</p>
+                    <p id="loading-desc" style="font-size: 0.85rem; color: var(--text-secondary); text-align: center; max-width: 400px;">
+                        Analyzing scene composition, poses, and camera angle, then illustrating a genuine hand-drawn sketch...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const previewArea = document.getElementById('preview-area');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingTitle = document.getElementById('loading-title');
+            const loadingDesc = document.getElementById('loading-desc');
+            const btnConvert = document.getElementById('btn-convert');
+            const btnDownload = document.getElementById('btn-download');
+            const btnChangeImage = document.getElementById('btn-change-image');
+            
+            // Inputs
+            const inputApiKey = document.getElementById('input-api-key');
+            const btnSaveKey = document.getElementById('btn-save-key');
+            const connStatus = document.getElementById('conn-status');
+            const inputCustomPrompt = document.getElementById('input-custom-prompt');
+            const sliderLineweight = document.getElementById('slider-lineweight');
+            const sliderShading = document.getElementById('slider-shading');
+            const valLineweight = document.getElementById('val-lineweight');
+            const valShading = document.getElementById('val-shading');
+            const toast = document.getElementById('toast');
+
+            // Collapsible AI Settings
+            const aiSettingsHeader = document.getElementById('ai-settings-header');
+            const aiSettingsContent = document.getElementById('ai-settings-content');
+            const aiSettingsIcon = document.getElementById('ai-settings-icon');
+
+            aiSettingsHeader.addEventListener('click', () => {
+                const isOpen = aiSettingsContent.classList.toggle('open');
+                aiSettingsIcon.textContent = isOpen ? '▲' : '▼';
+            });
+
+            function showToast(message, duration=4000) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), duration);
+            }
+
+            // Load saved API key from localStorage
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey) {
+                inputApiKey.value = savedKey;
+                testConnectionSilently(savedKey);
+            }
+            
+            btnSaveKey.addEventListener('click', () => {
+                const key = inputApiKey.value.trim();
+                localStorage.setItem('gemini_api_key', key);
+                if (key) {
+                    testConnectionSilently(key, true);
+                } else {
+                    showConnStatus('warning', '⚠️ API Key dihapus.');
+                }
+            });
+
+            async function testConnectionSilently(key, userInitiated = false) {
+                if(userInitiated) showConnStatus('testing', '⏳ Menguji koneksi...');
+                try {
+                    const res = await fetch('/sketch/test_connection', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: key })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.status === 'success') {
+                        showConnStatus('success', `🟢 ${data.message}`);
+                    } else {
+                        if(userInitiated) showConnStatus('error', `🔴 ${data.message || 'Koneksi gagal'}`);
+                    }
+                } catch (err) {
+                    if(userInitiated) showConnStatus('error', `🔴 Gagal menghubungi server.`);
+                }
+            }
+
+            function showConnStatus(type, text) {
+                connStatus.className = `conn-status-badge ${type}`;
+                connStatus.innerHTML = text;
+                connStatus.classList.remove('hidden');
+            }
+
+            // Views
+            const viewTabs = document.querySelectorAll('.view-tab');
+            const viewSplit = document.getElementById('view-split');
+            const viewSide = document.getElementById('view-side');
+            const viewSketch = document.getElementById('view-sketch');
+
+            // Images
+            const imgOrigSplit = document.getElementById('img-orig-split');
+            const imgSketchSplit = document.getElementById('img-sketch-split');
+            const imgOrigSide = document.getElementById('img-orig-side');
+            const imgSketchSide = document.getElementById('img-sketch-side');
+            const imgSketchSingle = document.getElementById('img-sketch-single');
+            const splitBeforeLayer = document.getElementById('split-before-layer');
+            const splitDivider = document.getElementById('split-divider');
+            const aiAnalysisCard = document.getElementById('ai-analysis-card');
+            const aiAnalysisText = document.getElementById('ai-analysis-text');
+
+            // State
+            let currentFile = null;
+            let currentOriginalUrl = null;
+            let currentSketchUrl = null;
+            let currentDownloadFilename = "storyboard_sketch.jpg";
+            let selectedStyle = "pure_outline";
+
+            // Style Card Selection
+            const styleCards = document.querySelectorAll('[data-style]');
+            styleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    styleCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedStyle = card.dataset.style;
+                });
+            });
+
+            sliderLineweight.addEventListener('input', (e) => { valLineweight.textContent = `${e.target.value}x`; });
+            sliderShading.addEventListener('input', (e) => { valShading.textContent = `${e.target.value}x`; });
+
+            // Dropzone & File Handling
+            dropzone.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) handleFile(e.target.files[0]);
+            });
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+            });
+
+            window.addEventListener('paste', (e) => {
+                const items = e.clipboardData.items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        handleFile(items[i].getAsFile());
+                        break;
+                    }
+                }
+            });
+
+            btnChangeImage.addEventListener('click', () => fileInput.click());
+            btnConvert.addEventListener('click', () => generateSketch());
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file (JPEG, PNG, WEBP).');
+                    return;
+                }
+                currentFile = file;
+                currentOriginalUrl = URL.createObjectURL(file);
+                btnConvert.disabled = false;
+                
+                imgOrigSplit.src = currentOriginalUrl;
+                imgOrigSide.src = currentOriginalUrl;
+                
+                generateSketch();
+            }
+
+            async function generateSketch() {
+                if (!currentFile) return;
+
+                const apiKey = inputApiKey.value.trim();
+
+                // UI loading state
+                dropzone.classList.add('hidden');
+                previewArea.classList.add('hidden');
+                loadingOverlay.classList.remove('hidden');
+                btnConvert.disabled = true;
+
+                loadingTitle.textContent = 'Generating Sketch...';
+                loadingDesc.textContent = 'Smart Convert is processing your image...';
+
+                const formData = new FormData();
+                formData.append('file', currentFile);
+                formData.append('style', selectedStyle);
+                if (apiKey) formData.append('api_key', apiKey);
+                if (inputCustomPrompt.value.trim()) formData.append('custom_instructions', inputCustomPrompt.value.trim());
+                formData.append('line_weight', sliderLineweight.value);
+                formData.append('shading', sliderShading.value);
+                formData.append('contrast', '1.2');
+                formData.append('paper_texture', 'true');
+
+                try {
+                    const res = await fetch('/sketch/smart_convert', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+
+                    if (data.status === 'success') {
+                        currentSketchUrl = data.sketch_url;
+                        currentDownloadFilename = data.download_filename || `storyboard_sketch.jpg`;
+
+                        imgOrigSplit.src = currentOriginalUrl;
+                        imgSketchSplit.src = currentSketchUrl;
+                        imgOrigSide.src = currentOriginalUrl;
+                        imgSketchSide.src = currentSketchUrl;
+                        imgSketchSingle.src = currentSketchUrl;
+
+                        if (data.scene_analysis) {
+                            aiAnalysisText.textContent = data.scene_analysis;
+                            aiAnalysisCard.classList.remove('hidden');
+                        } else {
+                            aiAnalysisCard.classList.add('hidden');
+                        }
+                        
+                        if (data.fallback_reason) {
+                            showToast(`⚠️ Fallback to Local: ${data.fallback_reason}`);
+                        }
+
+                        loadingOverlay.classList.add('hidden');
+                        previewArea.classList.remove('hidden');
+                        btnDownload.classList.remove('hidden');
+                    } else {
+                        throw new Error(data.message || 'Generation failed');
+                    }
+                } catch (err) {
+                    loadingOverlay.classList.add('hidden');
+                    if (currentSketchUrl) {
+                        previewArea.classList.remove('hidden');
+                    } else {
+                        dropzone.classList.remove('hidden');
+                    }
+                    showToast(`❌ Error: ${err.message}`);
+                } finally {
+                    btnConvert.disabled = false;
+                }
+            }
+
+            // Download handler
+            btnDownload.addEventListener('click', () => {
+                if (!currentSketchUrl) return;
+                const link = document.createElement('a');
+                link.href = currentSketchUrl;
+                link.download = currentDownloadFilename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // View Tabs switching
+            viewTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    viewTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const view = tab.dataset.view;
+                    viewSplit.classList.toggle('hidden', view !== 'split');
+                    viewSide.classList.toggle('hidden', view !== 'side');
+                    viewSketch.classList.toggle('hidden', view !== 'sketch');
+                });
+            });
+
+            // Split View Slider Dragging
+            let isDraggingSplit = false;
+
+            function updateSplitPosition(clientX) {
+                const rect = viewSplit.getBoundingClientRect();
+                let x = clientX - rect.left;
+                if (x < 0) x = 0;
+                if (x > rect.width) x = rect.width;
+                const percent = (x / rect.width) * 100;
+
+                splitDivider.style.left = `${percent}%`;
+                splitBeforeLayer.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
+            }
+
+            splitDivider.addEventListener('mousedown', () => isDraggingSplit = true);
+            window.addEventListener('mouseup', () => isDraggingSplit = false);
+            window.addEventListener('mousemove', (e) => {
+                if (isDraggingSplit) updateSplitPosition(e.clientX);
+            });
+
+            splitDivider.addEventListener('touchstart', () => isDraggingSplit = true);
+            window.addEventListener('touchend', () => isDraggingSplit = false);
+            window.addEventListener('touchmove', (e) => {
+                if (isDraggingSplit && e.touches.length > 0) {
+                    updateSplitPosition(e.touches[0].clientX);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

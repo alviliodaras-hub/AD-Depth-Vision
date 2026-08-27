@@ -23,6 +23,49 @@ class PlaygroundProcessor:
         print("Playground models loaded successfully.")
 
     @torch.inference_mode()
+    def process_image(self, input_path: str, output_path: str, video_id: str, processed_dir: str, progress_callback=None):
+        if progress_callback:
+            progress_callback(10, 100, elapsed_seconds=0.0, eta_seconds=0.0)
+            
+        print(f"Processing Playground Image: {input_path}")
+        image = cv2.imread(input_path)
+        if image is None:
+            raise ValueError(f"Could not read image: {input_path}")
+            
+        # Generate Depth Map
+        pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        depth_result = self.depth_pipe(pil_img)
+        depth_map = depth_result["depth"]
+        depth_np = np.array(depth_map)
+        
+        # Save base image and depth map to processed dir so frontend can load them
+        base_filename = f"{video_id}_base.jpg"
+        depth_filename = f"{video_id}_depth.jpg"
+        
+        base_path = os.path.join(processed_dir, base_filename)
+        depth_path = os.path.join(processed_dir, depth_filename)
+        
+        cv2.imwrite(base_path, image)
+        cv2.imwrite(depth_path, depth_np)
+        
+        # Write JSON for frontend to know it's image mode
+        scene_data = {
+            "mode": "image",
+            "base_url": f"/outputs/{base_filename}",
+            "depth_url": f"/outputs/{depth_filename}",
+            "scene_width": image.shape[1],
+            "scene_height": image.shape[0]
+        }
+        
+        with open(output_path, "w") as f:
+            json.dump(scene_data, f)
+            
+        if progress_callback:
+            progress_callback(100, 100, elapsed_seconds=1.0, eta_seconds=0.0)
+            
+        print(f"Playground Image saved to {output_path}")
+
+    @torch.inference_mode()
     def process_video(self, input_path: str, output_path: str, progress_callback=None):
         cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
@@ -38,6 +81,7 @@ class PlaygroundProcessor:
             progress_callback(0, total_frames, elapsed_seconds=0.0, eta_seconds=0.0)
 
         scene_data = {
+            "mode": "video",
             "fps": fps,
             "total_frames": total_frames,
             "scene_width": width,

@@ -11,7 +11,8 @@
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "three/addons/loaders/GLTFLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js"
             }
         }
     </script>
@@ -27,63 +28,214 @@
             <button id="view-side" title="Side View (Numpad 3)">Side</button>
             <button id="view-top" title="Top View (Numpad 7)">Top</button>
             <button id="view-persp" class="active" title="Perspective (Numpad 5)">Persp</button>
+            <div class="cam-view-dropdown">
+                <button id="view-cam" title="Camera View (Look through a camera)">Cam View ▾</button>
+                <div class="cam-dropdown-menu" id="cam-dropdown-menu">
+                    <div class="cam-dropdown-empty">No cameras yet</div>
+                </div>
+            </div>
         </div>
         <div class="header-actions">
+            <button id="record-btn" class="btn btn-record" title="Record Viewport to Video">🔴 Record</button>
+            <button id="view-on-phone-btn" class="btn btn-primary" style="background: #9b59b6;">📱 View on Phone</button>
             <button id="export-json-btn" class="btn btn-secondary">💾 Export JSON</button>
             <button id="screenshot-btn" class="btn btn-primary">📸 Screenshot</button>
             <a href="index.html" class="btn btn-secondary">Back</a>
         </div>
     </header>
+    
+    <!-- QR Code Overlay -->
+    <div id="qr-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; text-align: center; color: black;">
+            <h2 style="margin-top: 0;">Scan to View on Phone</h2>
+            <p>Ensure your phone and PC are on the same WiFi network.</p>
+            <div id="qr-code-container" style="margin: 1.5rem 0;">
+                <img id="qr-code-img" src="" alt="QR Code" width="200" height="200" style="display: none;">
+            </div>
+            <p id="qr-url-text" style="font-size: 0.8rem; word-break: break-all; color: #555;"></p>
+            <button id="close-qr-btn" class="btn btn-secondary" style="margin-top: 1rem; color: white;">Close</button>
+        </div>
+    </div>
 
     <div class="main-container">
         <aside class="toolbar">
+            <!-- Transform Tools -->
             <div class="tool-group">
                 <h3>Transform</h3>
                 <button class="tool-btn active" id="tool-select" title="Select (Q)"><span class="icon">👆</span> Select</button>
                 <button class="tool-btn" id="tool-translate" title="Move (G)"><span class="icon">↔️</span> Move</button>
                 <button class="tool-btn" id="tool-rotate" title="Rotate (R)"><span class="icon">🔄</span> Rotate</button>
                 <button class="tool-btn" id="tool-scale" title="Scale (S)"><span class="icon">↕️</span> Scale</button>
-            </div>
-            
-            <div class="tool-group">
-                <h3>Add Elements</h3>
-                <button class="tool-btn" id="add-box"><span class="icon">🟦</span> Box Prop</button>
-                <button class="tool-btn" id="add-cylinder"><span class="icon">🛢️</span> Cylinder</button>
-                <button class="tool-btn" id="add-plane"><span class="icon">🧱</span> Wall/Plane</button>
-                <button class="tool-btn" id="add-camera"><span class="icon">📷</span> Camera Marker</button>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                <label class="toggle-lock" title="Show Bone Helpers for Manual Rigging">
+                    <input type="checkbox" id="toggle-bones" checked>
+                    <span class="icon">🦴</span> Show Bones
+                </label>
             </div>
 
+            <!-- Import & Add -->
+            <div class="tool-group">
+                <h3>Import & Add</h3>
+                <button class="tool-btn" id="add-character"><span class="icon">🧑</span> Add Character</button>
+                <button class="tool-btn" id="import-2d-3d"><span class="icon">🖼️</span> Import 2D → 3D</button>
+                <button class="tool-btn" id="import-360"><span class="icon">🌐</span> Import 360° Panorama</button>
+                <button class="tool-btn" id="import-motion"><span class="icon">🎬</span> Import Motion Video</button>
+                <button class="tool-btn" id="import-glb"><span class="icon">📦</span> Import 3D Model (.glb)</button>
+            </div>
+
+            <!-- Text to Motion -->
+            <div class="tool-group">
+                <h3>Text to Motion (AI)</h3>
+                <textarea id="ai-motion-text" placeholder="e.g. walk forward 3 steps, then turn left" style="width: 100%; height: 60px; margin-bottom: 5px; padding: 5px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: white;"></textarea>
+                <button class="tool-btn btn-primary" id="ai-motion-btn"><span class="icon">✨</span> Generate Motion</button>
+            </div>
+
+            <!-- Primitives -->
+            <div class="tool-group">
+                <h3>Primitives</h3>
+                <button class="tool-btn" id="add-box"><span class="icon">🟦</span> Box</button>
+                <button class="tool-btn" id="add-sphere"><span class="icon">🔵</span> Sphere</button>
+                <button class="tool-btn" id="add-cylinder"><span class="icon">🛢️</span> Cylinder</button>
+                <button class="tool-btn" id="add-cone"><span class="icon">🔺</span> Cone</button>
+                <button class="tool-btn" id="add-torus"><span class="icon">🍩</span> Torus</button>
+                <button class="tool-btn" id="add-plane"><span class="icon">🧱</span> Wall/Plane</button>
+                <button class="tool-btn" id="add-spotlight"><span class="icon">💡</span> Spotlight</button>
+            </div>
+
+            <!-- Cameras -->
+            <div class="tool-group">
+                <h3>Cameras</h3>
+                <button class="tool-btn" id="add-camera"><span class="icon">📷</span> Add Camera</button>
+                <div id="camera-list" class="camera-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Scene Settings -->
+            <div class="tool-group collapsible">
+                <h3 class="collapsible-header" data-target="scene-settings-body">Scene ▾</h3>
+                <div id="scene-settings-body" class="collapsible-body">
+                    <label class="scene-control">
+                        <span>Background</span>
+                        <input type="color" id="scene-bg-color" value="#1e1e1e">
+                    </label>
+                    <label class="scene-control">
+                        <span>Ambient</span>
+                        <input type="range" id="scene-ambient" min="0" max="2" step="0.05" value="0.4">
+                    </label>
+                    <label class="scene-control">
+                        <span>Sun</span>
+                        <input type="range" id="scene-sun" min="0" max="3" step="0.05" value="0.8">
+                    </label>
+                    <label class="scene-control">
+                        <span>Sun X</span>
+                        <input type="range" id="scene-sun-x" min="-20" max="20" step="0.5" value="5">
+                    </label>
+                    <label class="scene-control">
+                        <span>Sun Y</span>
+                        <input type="range" id="scene-sun-y" min="0" max="30" step="0.5" value="10">
+                    </label>
+                    <label class="scene-control">
+                        <span>Sun Z</span>
+                        <input type="range" id="scene-sun-z" min="-20" max="20" step="0.5" value="5">
+                    </label>
+                    <label class="toggle-lock"><input type="checkbox" id="toggle-grid" checked> <span class="icon">📐</span> Grid</label>
+                    <label class="toggle-lock"><input type="checkbox" id="toggle-shadows" checked> <span class="icon">🌑</span> Shadows</label>
+                    <label class="toggle-lock"><input type="checkbox" id="toggle-fog" checked> <span class="icon">🌫️</span> Fog</label>
+                </div>
+            </div>
+
+            <!-- Properties Panel -->
             <div class="tool-group" id="properties-panel" style="display: none;">
                 <h3>Properties</h3>
                 <label>Color: <input type="color" id="prop-color"></label>
+                <div class="scale-controls">
+                    <div class="scale-header">
+                        <span>Scale</span>
+                        <button id="scale-lock-btn" class="scale-lock active" title="Uniform Scale">🔗</button>
+                    </div>
+                    <div class="scale-inputs">
+                        <label>X <input type="number" id="scale-x" value="1" step="0.1" min="0.01"></label>
+                        <label>Y <input type="number" id="scale-y" value="1" step="0.1" min="0.01"></label>
+                        <label>Z <input type="number" id="scale-z" value="1" step="0.1" min="0.01"></label>
+                    </div>
+                    <button class="tool-btn" id="reset-scale" style="font-size: 12px;"><span class="icon">↩️</span> Reset Scale</button>
+                </div>
+                <div class="fov-control" id="fov-control" style="display:none;">
+                    <label class="scene-control">
+                        <span>FOV</span>
+                        <input type="range" id="camera-fov" min="10" max="120" step="1" value="45">
+                    </label>
+                </div>
                 <button class="tool-btn danger" id="delete-element" title="Delete (Del)"><span class="icon">🗑️</span> Delete</button>
+            </div>
+
+            <!-- Scene Outliner -->
+            <div class="tool-group collapsible">
+                <h3 class="collapsible-header" data-target="outliner-body">Outliner ▾</h3>
+                <div id="outliner-body" class="collapsible-body outliner-list">
+                    <!-- Dynamically populated -->
+                </div>
             </div>
         </aside>
 
+        <!-- Hidden file inputs for import dialogs -->
+        <input type="file" id="import-2d-file" accept="image/jpeg,image/png" hidden>
+        <input type="file" id="import-360-file" accept="image/jpeg,image/png" hidden>
+        <input type="file" id="import-motion-file" accept="video/mp4,video/avi,video/mov,video/*" hidden>
+        <input type="file" id="import-glb-file" accept=".glb,.gltf" hidden>
+
         <div class="viewport-container" id="viewport">
-            <div id="loading-overlay">
+            <button id="enable-gyro-btn" class="btn btn-primary" style="display: none; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 1rem 2rem; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">🧭 Enable Gyroscope</button>
+            <div id="loading-overlay" style="display: none;">
                 <div class="loader">
                     <div class="spinner"></div>
                     <p>Loading 3D Scene Data...</p>
                 </div>
             </div>
+            <!-- Camera PIP Preview -->
+            <div id="camera-pip" class="camera-pip" style="display: none;">
+                <div class="pip-header">
+                    <span id="pip-cam-name">Camera 1</span>
+                    <button id="pip-close" class="pip-close">✕</button>
+                </div>
+                <canvas id="pip-canvas" width="320" height="180"></canvas>
+            </div>
+            <!-- Recording indicator -->
+            <div id="recording-indicator" class="recording-indicator" style="display: none;">
+                <span class="rec-dot"></span> REC
+            </div>
         </div>
     </div>
 
-    <footer class="timeline-bar">
+    <footer class="timeline-bar" id="timeline-bar" style="display: none;">
         <div class="playback-controls">
             <button id="play-btn" title="Play/Pause (Space)"><span class="icon">▶️</span></button>
         </div>
         <div class="timeline-slider-container">
-            <input type="range" id="timeline-slider" min="0" max="100" value="0">
+            <div class="timeline-wrapper">
+                <input type="range" id="timeline-slider" min="0" max="100" value="0">
+                <div id="keyframe-markers" class="keyframe-markers"></div>
+                <div id="motion-segments" class="motion-segments"></div>
+            </div>
         </div>
         <div class="frame-counter">
             <span id="current-frame">0</span> / <span id="total-frames">0</span>
         </div>
+        <div class="speed-control">
+            <label title="Playback Speed">
+                <span id="speed-label">1×</span>
+                <input type="range" id="speed-slider" min="0.25" max="4" step="0.25" value="1">
+            </label>
+        </div>
         <div class="timeline-actions">
+            <button class="tool-btn" id="add-keyframe-btn" title="Add Keyframe (K)"><span class="icon">🔑</span></button>
+            <button class="tool-btn" id="split-motion-btn" title="Split Motion at Frame"><span class="icon">✂️</span></button>
+            <button class="tool-btn" id="reverse-segment-btn" title="Reverse Current Segment"><span class="icon">⏪</span></button>
+            <button class="tool-btn" id="loop-segment-btn" title="Loop Current Segment"><span class="icon">🔁</span></button>
             <label class="toggle-lock" title="Lock pose and manipulate freely">
                 <input type="checkbox" id="lock-frame">
-                <span class="icon">🔒</span> Lock Frame
+                <span class="icon">🔒</span> Lock
             </label>
         </div>
     </footer>

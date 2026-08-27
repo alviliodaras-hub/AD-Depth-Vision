@@ -8,3 +8,7 @@ Pillow
 tqdm
 ultralytics
 pywebview
+scenedetect[opencv]
+websockets
+av
+pypdf

@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AD-Depth Vision | AI Video to Depth Map, Pose & 3D White Converter</title>
+    <title>AD Creative Convert | AI Video to Depth Map, Pose & 3D White Converter</title>
     <meta name="description" content="Convert any video into a depth map, multi-character motion pivot, or 3D white clay mannequin video using state-of-the-art AI.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
     <div class="background-mesh"></div>
@@ -16,8 +18,8 @@
     <main class="container">
         <header>
             <div class="logo">
-                <span class="logo-icon">🔮</span>
-                <h1>AD-Depth Vision</h1>
+                <img src="logo.png" alt="AD Creative Convert Logo" class="logo-icon" style="width: 48px; height: 48px; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));">
+                <h1>AD Creative Convert</h1>
             </div>
             <p class="subtitle">Transform videos into 3D Depth Maps, Motion Pivots, or 3D White Characters.</p>
         </header>
@@ -34,14 +36,6 @@
                             <p>3D Spatial Depth Estimation</p>
                         </div>
                     </label>
-                    <label class="mode-card" data-mode="pose">
-                        <input type="radio" name="mode" value="pose" hidden>
-                        <div class="mode-icon">🕺</div>
-                        <div class="mode-info">
-                            <strong>Character Motion Pivot</strong>
-                            <p>Multi-Character Pose Tracking (3+ People)</p>
-                        </div>
-                    </label>
                     <label class="mode-card" data-mode="3d_white">
                         <input type="radio" name="mode" value="3d_white" hidden>
                         <div class="mode-icon">🗿</div>
@@ -50,12 +44,44 @@
                             <p>Untextured 3D Clay Mannequin Render</p>
                         </div>
                     </label>
+                    <label class="mode-card" data-mode="blocking">
+                        <input type="radio" name="mode" value="blocking" hidden>
+                        <div class="mode-icon">🎥</div>
+                        <div class="mode-info">
+                            <strong>Top-Down Blocking</strong>
+                            <p>Simulate set blocking & animatic from top-view</p>
+                        </div>
+                    </label>
                     <label class="mode-card" data-mode="playground">
                         <input type="radio" name="mode" value="playground" hidden>
                         <div class="mode-icon">🎮</div>
                         <div class="mode-info">
                             <strong>3D Playground</strong>
                             <p>Interactive 3D Blocking & Previz Scene</p>
+                        </div>
+                    </label>
+                    <label class="mode-card" data-mode="autocut">
+                        <input type="radio" name="mode" value="autocut" hidden>
+                        <div class="mode-icon">🎬</div>
+                        <div class="mode-info">
+                            <strong>Autocut Midframe</strong>
+                            <p>Generate Shot Storyboard Grid</p>
+                        </div>
+                    </label>
+                    <label class="mode-card" data-mode="sceneflow">
+                        <input type="radio" name="mode" value="sceneflow" hidden>
+                        <div class="mode-icon">⚡</div>
+                        <div class="mode-info">
+                            <strong>SceneFlow Sync</strong>
+                            <p>Auto-Align Script to Video & Cues</p>
+                        </div>
+                    </label>
+                    <label class="mode-card" data-mode="sketch">
+                        <input type="radio" name="mode" value="sketch" hidden>
+                        <div class="mode-icon">🎨</div>
+                        <div class="mode-info">
+                            <strong>Storyboard Sketch</strong>
+                            <p>Convert Images to Hand-Drawn Storyboard</p>
                         </div>
                     </label>
                 </div>
@@ -69,10 +95,10 @@
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                 </div>
-                <h2>Drag & Drop your video</h2>
-                <p>or <span class="browse-btn">browse files</span></p>
+                <h2 id="drop-zone-title">Drag & Drop your video</h2>
+                <p id="drop-zone-subtitle">or <span class="browse-btn">browse files</span></p>
                 <p class="formats">Supports MP4, AVI, MOV (Max 50MB recommended)</p>
-                <input type="file" id="file-input" accept="video/mp4,video/x-m4v,video/*" hidden>
+                <input type="file" id="file-input" accept="video/mp4,video/x-m4v,video/*,image/*" hidden>
             </div>
 
             <div class="colormap-selector" id="colormap-section">
@@ -110,6 +136,360 @@
                     </label>
                 </div>
             </div>
+            <div class="safe-mode-selector" id="safe-mode-section">
+                <h3>🛡️ Platform-Safe Mode</h3>
+                <p class="safe-mode-desc">Tambahkan elemen visual agar output tidak kena restrict di platform AI</p>
+                <div class="safe-mode-options" id="safe-mode-options">
+                    <label class="safe-mode-option selected" data-value="none">
+                        <input type="radio" name="safe_mode" value="none" checked hidden>
+                        <div class="safe-mode-icon">❌</div>
+                        <div class="safe-mode-info">
+                            <strong>None</strong>
+                            <p>Output standar tanpa modifikasi</p>
+                        </div>
+                    </label>
+                    <label class="safe-mode-option" data-value="side_by_side">
+                        <input type="radio" name="safe_mode" value="side_by_side" hidden>
+                        <div class="safe-mode-icon">📐</div>
+                        <div class="safe-mode-info">
+                            <strong>Side-by-Side</strong>
+                            <p>Original + Depth Map berdampingan</p>
+                        </div>
+                    </label>
+                    <label class="safe-mode-option" data-value="overlay">
+                        <input type="radio" name="safe_mode" value="overlay" hidden>
+                        <div class="safe-mode-icon">📊</div>
+                        <div class="safe-mode-info">
+                            <strong>Technical Overlay</strong>
+                            <p>Grid + Legend + Watermark teknis</p>
+                        </div>
+                    </label>
+                    <label class="safe-mode-option" data-value="border">
+                        <input type="radio" name="safe_mode" value="border" hidden>
+                        <div class="safe-mode-icon">🖼️</div>
+                        <div class="safe-mode-info">
+                            <strong>Technical Border</strong>
+                            <p>Frame border dengan info metadata</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="autocut-options hidden" id="autocut-section">
+                <h3>🎬 Autocut Settings</h3>
+                <div class="control-group">
+                    <label for="autocut-capture">Capture Frame</label>
+                    <select id="autocut-capture" style="width: 100%; padding: 0.8rem; background: var(--card-bg); border: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 8px;">
+                        <option value="mid_frame" selected>Mid Frame (Tengah Shot - Recommended)</option>
+                        <option value="first_frame">First Frame (Awal Shot)</option>
+                        <option value="end_frame">End Frame (Akhir Shot)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- SceneFlow Script-Video Sync Section -->
+            <div class="sceneflow-options hidden" id="sceneflow-section" style="margin-top: 1.5rem;">
+                <div class="sceneflow-banner" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15)); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.5rem;">⚡</span>
+                        <h3 style="margin: 0; color: #fff;">SceneFlow Screenplay-to-Video Sync Studio</h3>
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+                        Upload footage and script simultaneously. The AI extracts audio dialog bursts, synchronizes 8 color-coded screenplay cues in real-time, and lets you fine-tune timestamps on an interactive timeline.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <!-- Video Upload Area -->
+                    <div class="control-group">
+                        <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">📹 1. Upload Video Footage</label>
+                        <div id="sceneflow-video-dropzone" class="dropzone" style="border: 2px dashed rgba(255,255,255,0.2); border-radius: 10px; padding: 2rem 1rem; text-align: center; cursor: pointer; background: rgba(0,0,0,0.2);">
+                            <span id="sceneflow-dropzone-text">Drop video here or click to browse</span>
+                            <input type="file" id="sceneflow-video-file" accept="video/*" hidden>
+                        </div>
+                    </div>
+
+                    <!-- Script Input Area -->
+                    <div class="control-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <label style="font-weight: 600;">📜 2. Screenplay / Script</label>
+                            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" id="sceneflow-upload-doc-btn" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem; background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4); color: #a5b4fc;" title="Upload script from PDF, TXT, or Fountain file">📄 Upload PDF / TXT</button>
+                                <input type="file" id="sceneflow-doc-file" accept=".pdf,.txt,.fountain,.md" hidden>
+                                <select id="sceneflow-demo-select" class="custom-select" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                                    <option value="scifi">Sci-Fi Lab Demo</option>
+                                    <option value="chase">Cyberpunk Chase Demo</option>
+                                </select>
+                                <button type="button" id="sceneflow-load-demo-btn" class="btn btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">Load Demo</button>
+                            </div>
+                        </div>
+                        <textarea id="sceneflow-script-input" rows="8" placeholder="Paste your screenplay script text here...
+Example:
+INT. LAB - NIGHT
+DR. ARIS: &quot;The neural sync is stable.&quot;
+[CAMERA: SLOW PAN LEFT]
+Dr. Aris flips the breaker switch.
+[SFX: POWER GENERATOR HUMMING]"></textarea>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button class="btn btn-primary" id="sceneflow-align-btn" style="padding: 0.85rem 2.5rem; font-size: 1.05rem; font-weight: 700; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);">
+                        ✨ Generate & Auto-Align Script
+                    </button>
+                </div>
+            </div>
+            <!-- Top-Down Blocking UI -->
+            <div class="blocking-options hidden" id="blocking-section" style="margin-top: 1.5rem;">
+                <h3>🎥 Blocking Editor</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; text-align: center;">Upload a floor plan image, add characters and cameras, and set keyframes over time.</p>
+                
+                <div class="blocking-controls" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 8px;">
+                        <label>Duration: <span id="blocking-duration-label">5</span>s</label>
+                        <input type="range" id="blocking-duration" min="1" max="30" value="5" style="width: 100px;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <button id="blocking-undo-btn" class="btn btn-secondary" style="padding: 0.5rem;" title="Undo (Cmd+Z)">↩️ Undo</button>
+                        <button id="blocking-redo-btn" class="btn btn-secondary" style="padding: 0.5rem;" title="Redo (Cmd+Shift+Z)">↪️ Redo</button>
+                        <button id="blocking-reset-btn" class="btn btn-secondary" style="padding: 0.5rem; color: #e74c3c;" title="Reset Project">⚠️ Reset</button>
+                        <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.2); margin: 0 5px;"></div>
+                        <button id="blocking-export-btn" class="btn btn-secondary" style="padding: 0.5rem;" title="Download project file">💾 Save Project</button>
+                        <button id="blocking-import-btn" class="btn btn-secondary" style="padding: 0.5rem;" title="Load project file">📂 Load</button>
+                        <input type="file" id="blocking-import-file" accept=".json" style="display: none;">
+                        <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.2); margin: 0 5px;"></div>
+                        <button id="blocking-render-btn" class="btn" style="padding: 0.5rem; background: var(--primary-color); color: white; border: none; font-weight: bold; box-shadow: 0 0 10px rgba(108, 92, 231, 0.5);" title="Render project as MP4 Video">🎬 Render Video</button>
+                        <button id="blocking-generate-prompt-btn" class="btn" style="padding: 0.5rem; background: #f39c12; color: white; border: none; font-weight: bold; box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);" title="Generate Prompt based on timeline">✍️ Gen Prompt</button>
+                        <button id="blocking-import-prompt-btn" class="btn" style="padding: 0.5rem; background: #2ecc71; color: white; border: none; font-weight: bold; box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);" title="Animate canvas from text prompt">📥 Import Prompt</button>
+                    </div>
+                </div>
+
+                <div class="blocking-main-workspace" style="display: flex; gap: 1rem; align-items: stretch;">
+                    <!-- Project Manager Sidebar -->
+                    <div class="blocking-project-manager" style="width: 250px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="margin: 0; color: #f39c12;">📂 Projects</h4>
+                            <button id="blocking-new-project-btn" class="btn" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; padding: 0.2rem 0.5rem; font-size: 0.8rem;">+ New</button>
+                        </div>
+                        
+                        <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 5px;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">Current Workspace</div>
+                            <div id="project-list-autosave" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                <div class="project-item active" id="load-autosave-btn" style="background: rgba(52, 152, 219, 0.2); border: 1px solid #3498db; padding: 0.5rem; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: bold; font-size: 0.9rem; color: #3498db;">Auto-Saved Project</div>
+                                        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5);" id="autosave-time-label">Updated automatically</div>
+                                    </div>
+                                    <button id="clear-autosave-btn" class="btn btn-secondary" style="padding: 2px 5px; font-size: 0.8rem; background: rgba(0,0,0,0.5); border: none;" title="Clear Workspace">🗑️</button>
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem; text-transform: uppercase; letter-spacing: 1px;">Saved Projects</div>
+                            <div id="project-list-saved" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                <!-- Saved items injected via JS -->
+                            </div>
+                            
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>♻️ Recycle Bin</span>
+                                <button id="empty-trash-btn" class="btn btn-secondary" style="padding: 2px 5px; font-size: 0.6rem; background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.5); display: none;">Empty</button>
+                            </div>
+                            <div id="project-list-trash" style="display: flex; flex-direction: column; gap: 0.3rem;">
+                                <!-- Trash items injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="blocking-editor" style="flex: 1; background: rgba(0,0,0,0.5); border: 2px solid var(--border-color); border-radius: 12px; overflow: hidden; position: relative;">
+                        <!-- Canvas Controls -->
+                        <div style="position: absolute; top: 10px; right: 10px; z-index: 100; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border-color);">
+                            <span style="font-size: 0.8rem; color: #fff;">🔍 Zoom</span>
+                            <input type="range" id="canvas-zoom-slider" min="0.2" max="3" step="0.1" value="1" style="width: 100px; cursor: pointer;">
+                            <button id="canvas-reset-pan-btn" class="btn btn-secondary" style="padding: 2px 6px; font-size: 0.8rem;">Reset View</button>
+                        </div>
+                        <div id="blocking-stage" style="position: relative; width: 100%; aspect-ratio: 16/9; background-color: #1a1a24; background-size: contain; background-position: center; background-repeat: no-repeat; overflow: hidden; transition: background-image 0.3s ease; transform-origin: center center;">
+                            
+                            <!-- Spotlight Blur Overlay & Mask -->
+                            <svg id="spotlight-svg" width="0" height="0" style="position: absolute;">
+                                <defs>
+                                    <mask id="spotlight-mask">
+                                        <!-- White means "apply blur", Black means "cut hole (clear)" -->
+                                        <rect width="100%" height="100%" fill="white" />
+                                        <g id="spotlight-holes"></g>
+                                    </mask>
+                                </defs>
+                            </svg>
+                            <div id="spotlight-overlay" style="position: absolute; inset: 0; pointer-events: none; z-index: 0; display: none;"></div>
+
+                            <p id="blocking-placeholder" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-secondary); pointer-events: none; text-align: center;">Upload images below to start blocking.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="blocking-bg-manager" style="margin-top: 1rem; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <h4 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Background Plates</h4>
+                    <div style="display: flex; gap: 1rem; align-items: stretch; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label style="font-size: 0.8rem; font-weight: bold; color: #f39c12;">1. Top-Down View (Required)</label>
+                            <div id="top-view-upload" style="flex: 1; min-height: 100px; border: 2px dashed rgba(243, 156, 18, 0.5); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; padding: 5px;">
+                                <span class="upload-label" style="font-size: 0.8rem; pointer-events: none;">Click to upload Top View</span>
+                                <input type="text" id="top-view-tag" class="bg-tag-input" data-index="0" placeholder="@TOP_VIEW" style="width: 80%; padding: 0.2rem; margin-top: auto; background: rgba(0,0,0,0.7); border: 1px solid var(--border-color); color: white; border-radius: 4px; font-size: 0.7rem; text-align: center;" onclick="event.stopPropagation()">
+                                <input type="file" id="top-view-input" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label style="font-size: 0.8rem; font-weight: bold; color: #3498db;">2. Secondary Backgrounds (Max 3)</label>
+                            <div style="display: flex; gap: 10px; flex: 1;">
+                                <div class="bg-upload-slot" data-index="1" style="flex: 1; min-height: 100px; border: 2px dashed rgba(52, 152, 219, 0.3); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; padding: 5px;">
+                                    <span class="upload-label" style="font-size: 0.8rem; pointer-events: none;">+ BG 1</span>
+                                    <input type="text" class="bg-tag-input" data-index="1" placeholder="@LOC_1" style="width: 80%; padding: 0.2rem; margin-top: auto; background: rgba(0,0,0,0.7); border: 1px solid var(--border-color); color: white; border-radius: 4px; font-size: 0.7rem; text-align: center;" onclick="event.stopPropagation()">
+                                </div>
+                                <div class="bg-upload-slot" data-index="2" style="flex: 1; min-height: 100px; border: 2px dashed rgba(52, 152, 219, 0.3); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; padding: 5px;">
+                                    <span class="upload-label" style="font-size: 0.8rem; pointer-events: none;">+ BG 2</span>
+                                    <input type="text" class="bg-tag-input" data-index="2" placeholder="@LOC_2" style="width: 80%; padding: 0.2rem; margin-top: auto; background: rgba(0,0,0,0.7); border: 1px solid var(--border-color); color: white; border-radius: 4px; font-size: 0.7rem; text-align: center;" onclick="event.stopPropagation()">
+                                </div>
+                                <div class="bg-upload-slot" data-index="3" style="flex: 1; min-height: 100px; border: 2px dashed rgba(52, 152, 219, 0.3); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; padding: 5px;">
+                                    <span class="upload-label" style="font-size: 0.8rem; pointer-events: none;">+ BG 3</span>
+                                    <input type="text" class="bg-tag-input" data-index="3" placeholder="@LOC_3" style="width: 80%; padding: 0.2rem; margin-top: auto; background: rgba(0,0,0,0.7); border: 1px solid var(--border-color); color: white; border-radius: 4px; font-size: 0.7rem; text-align: center;" onclick="event.stopPropagation()">
+                                </div>
+                                <input type="file" id="secondary-bg-input" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="blocking-timeline" style="margin-top: 1rem; background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button id="add-keyframe-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">📍 Save Frame (Global)</button>
+                            <button id="clear-keyframes-btn" class="btn" style="background: #e74c3c; padding: 0.5rem 1rem;">🗑️ Clear Keys at Time</button>
+                        </div>
+                        <div style="font-size: 0.8rem; color: #f1c40f;">* Turn on 🔴 Record to save changes</div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                        <button id="blocking-record-btn" class="btn" style="padding: 0.3rem 0.6rem; font-size: 1.2rem; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); min-width: 50px;" title="Record Mode (Auto-Keyframe)">🔴</button>
+                        <button id="blocking-stop-btn" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 1.2rem; min-width: 50px;" title="Stop">⏹️</button>
+                        <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.2);"></div>
+                        <button id="blocking-prev-kf-btn" class="btn btn-secondary" style="padding: 0.3rem 0.6rem;" title="Previous Keyframe">⏮️</button>
+                        <button id="blocking-prev-frame-btn" class="btn btn-secondary" style="padding: 0.3rem 0.6rem;" title="Scrub Back (Hold)">⏪</button>
+                        <button id="blocking-play-btn" class="btn" style="padding: 0.3rem 0.6rem; font-size: 1.2rem; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; min-width: 50px;">▶️</button>
+                        <button id="blocking-next-frame-btn" class="btn btn-secondary" style="padding: 0.3rem 0.6rem;" title="Scrub Forward (Hold)">⏩</button>
+                        <button id="blocking-next-kf-btn" class="btn btn-secondary" style="padding: 0.3rem 0.6rem;" title="Next Keyframe">⏭️</button>
+                        <span id="blocking-time-label" style="font-family: monospace; width: 50px; text-align: center; font-size: 1.2rem;">0.0s</span>
+                        <!-- ZOOM CONTROL -->
+                        <div style="display: flex; align-items: center; margin-left: auto;">
+                            <span style="font-size: 0.8rem; margin-right: 5px;">Zoom</span>
+                            <input type="range" id="blocking-zoom-slider" min="1" max="5" step="0.1" value="1" style="width: 80px; cursor: pointer;">
+                        </div>
+                        
+                        </div> <!-- end of controls flex row -->
+                        
+                        <!-- Timeline container (Separated Headers & Tracks) -->
+                        <div style="display: flex; flex-direction: row; width: 100%; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(0,0,0,0.2); position: relative;">
+                            
+                            <!-- LEFT PANEL: Track Headers -->
+                            <div id="timeline-headers-container" style="width: 150px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.2); background: var(--card-bg, #1a1a1a); z-index: 20;">
+                                <!-- Spacer for ruler height -->
+                                <div style="height: 25px; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 5px;"></div>
+                                <!-- Headers go here -->
+                                <div id="blocking-track-headers" style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 10px;">
+                                    <!-- injected via JS -->
+                                </div>
+                            </div>
+                            
+                            <!-- RIGHT PANEL: Scrollable Tracks -->
+                            <div id="timeline-scroll-container" style="flex: 1; display: flex; flex-direction: column; overflow-x: auto; position: relative;">
+                                
+                                <!-- Content wrapper that will be zoomed -->
+                                <div id="timeline-zoom-content" style="width: 100%; min-width: 100%; position: relative; padding-bottom: 10px;">
+                                    
+                                    <!-- Timeline Ruler -->
+                                    <div id="timeline-ruler" style="height: 25px; width: 100%; position: relative; border-bottom: 1px solid rgba(255,255,255,0.2); margin-bottom: 5px;">
+                                        <!-- generated via JS -->
+                                    </div>
+                                    
+                                    <!-- The scrub slider over everything -->
+                                    <input type="range" id="blocking-timeline-slider" min="0" max="5" step="0.1" value="0" style="position: absolute; top: 0; left: 0; right: 0; width: 100%; z-index: 50; opacity: 0; cursor: pointer; height: 100%;">
+                                    
+                                    <!-- Visual Playhead Line -->
+                                    <div id="timeline-playhead" style="position: absolute; top: 0; bottom: 0; width: 2px; background-color: #e74c3c; z-index: 40; pointer-events: none; left: 0;">
+                                        <div style="width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; position: absolute; top: 15px; left: -4px;"></div>
+                                    </div>
+                                    
+                                    <!-- Multi-Track Container -->
+                                    <div id="blocking-keyframes-display" style="width: 100%; display: flex; flex-direction: column; gap: 2px;">
+                                        <!-- tracks generated via JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <div class="blocking-inspector" style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <!-- Entity List -->
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">📝 Entity List</h4>
+                        <div id="entity-list" style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Entities will be listed here -->
+                            <p style="color: rgba(255,255,255,0.3); font-size: 0.9rem;">No entities yet.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Entity Form -->
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">➕ Add New</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <select id="add-entity-type" style="padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                                <option value="character">👤 Character</option>
+                                <option value="camera">📹 Camera</option>
+                                <option value="shape-rect">⬛ Shape (Square)</option>
+                                <option value="shape-circle">⭕ Shape (Circle)</option>
+                                <option value="shape-line">📏 Shape (Line)</option>
+                            </select>
+                            <input type="text" id="add-entity-name" placeholder="Name (e.g. Actor 1)" style="padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                            <input type="text" id="add-entity-tag" placeholder="Asset Tag (e.g. @CHAR_1)" style="padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                            <div id="add-entity-color-wrapper" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-radius: 8px;">
+                                <label style="font-size: 0.9rem; color: var(--text-secondary);">Color:</label>
+                                <input type="color" id="add-entity-color" value="#3498db" style="background: none; border: none; cursor: pointer; width: 30px; height: 30px; padding: 0;">
+                            </div>
+                            <button id="submit-add-entity-btn" class="btn btn-primary" style="padding: 0.5rem; margin-top: 0.5rem;">Add to Stage</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Shot Settings -->
+                    <div style="background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">🎬 Shot Settings</h4>
+                        <label style="display: block; font-size: 0.9rem; margin-bottom: 0.3rem;">Active Camera for this Shot:</label>
+                        <select id="active-camera-select" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                            <option value="none">-- None (Top Down) --</option>
+                        </select>
+                        <label style="display: block; font-size: 0.9rem; margin-top: 0.8rem; margin-bottom: 0.3rem;">Shot Size (Optional):</label>
+                        <select id="active-shot-select" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                            <option value="">-- None --</option>
+                            <option value="WS">WS (Wide Shot)</option>
+                            <option value="MS">MS (Mid Shot)</option>
+                            <option value="MCU">MCU (Medium Close Up)</option>
+                            <option value="CU">CU (Close Up)</option>
+                            <option value="ECU">ECU (Extreme Close Up)</option>
+                            <option value="OTS">OTS (Over The Shoulder)</option>
+                            <option value="TS">TS (Two Shot)</option>
+                            <option value="POV">POV (Point of View)</option>
+                            <option value="INSERT">INSERT</option>
+                        </select>
+                        <label style="display: block; font-size: 0.9rem; margin-top: 0.8rem; margin-bottom: 0.3rem;">Shot BG Tag:</label>
+                        <select id="active-shot-bg-tag" style="width: 100%; padding: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                            <option value="">-- None --</option>
+                        </select>
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 0.5rem;">The active camera will be highlighted during playback.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="generate-actions" id="generate-actions" style="margin-top: 2rem; display: none;">
+                <button class="btn btn-primary" id="start-generate-btn" style="width: 100%; font-size: 1.1rem; padding: 1rem;">🚀 Start Processing</button>
+            </div>
         </section>
 
         <section class="processing-section hidden" id="processing-section">
@@ -117,6 +497,7 @@
                 <div class="scanner"></div>
                 <div class="progress-ring"></div>
             </div>
+            <div id="scanning-hud" class="hidden"></div>
             <h2 id="status-text">Uploading Video...</h2>
             <p id="progress-detail">Our AI is analyzing each frame.</p>
         </section>
@@ -124,7 +505,132 @@
         <section class="results-section hidden" id="results-section">
             <h2>Transformation Complete</h2>
             
-            <div class="video-compare">
+            <div id="panorama-container" class="hidden">
+                <h3>🌍 3D Environment Map (Extracted Background)</h3>
+                <img id="panorama-result" src="">
+            </div>
+            
+            <div id="autocut-selection-container" class="hidden" style="margin-top: 1.5rem;">
+                <h3>🎬 Autocut Selection</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Select the frames you want to include in the grid.</p>
+                <div id="autocut-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1rem;">
+                    <!-- Thumbnails will be injected here -->
+                </div>
+                
+                <div class="layout-selector-container">
+                    <h4>📐 Grid Layout</h4>
+                    <div class="layout-options">
+                        <label class="layout-option">
+                            <input type="radio" name="grid_layout" value="3x3" checked>
+                            <span class="layout-label">3x3 Panels (Paginated)</span>
+                        </label>
+                        <label class="layout-option">
+                            <input type="radio" name="grid_layout" value="all">
+                            <span class="layout-label">All-in-One</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="generate-grid-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem;">📸 Generate Grid from Selected</button>
+            </div>
+            
+            <div id="autocut-container" class="hidden">
+                <h3>🎬 Autocut Storyboard Grid</h3>
+                <div id="autocut-result" class="autocut-results-wrapper"></div>
+            </div>
+
+            <!-- SceneFlow Synced Studio Container -->
+            <div id="sceneflow-studio-container" class="hidden" style="margin-top: 1.5rem;">
+                <div class="sceneflow-studio-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; background: rgba(0,0,0,0.3); padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div>
+                        <h3 id="sceneflow-studio-title" style="margin: 0 0 0.25rem 0; color: #fff;">🎬 SceneFlow Studio</h3>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            Cues: <span id="sceneflow-meta-cues" style="color: #6366f1; font-weight: bold;">0</span> | Duration: <span id="sceneflow-meta-duration" style="color: #6366f1; font-weight: bold;">0s</span> | Sync Status: <span id="sceneflow-meta-audiosync">-</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" id="sceneflow-toggle-editor-btn" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">✏️ Edit Timecodes</button>
+                        <button class="btn btn-secondary" id="sceneflow-export-btn" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">💾 Export JSON</button>
+                        <button class="btn btn-secondary" id="sceneflow-import-btn" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">📂 Load JSON</button>
+                        <input type="file" id="sceneflow-import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
+
+                <!-- 8 Cue Filter Chips -->
+                <div class="sceneflow-filter-bar" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button class="sceneflow-filter-chip active" data-type="all">All Cues</button>
+                    <button class="sceneflow-filter-chip" data-type="dialogue" style="--chip-color: #eab308;">🟡 Dialogue</button>
+                    <button class="sceneflow-filter-chip" data-type="action" style="--chip-color: #3b82f6;">🔵 Action</button>
+                    <button class="sceneflow-filter-chip" data-type="camera" style="--chip-color: #22c55e;">🟢 Camera</button>
+                    <button class="sceneflow-filter-chip" data-type="shot" style="--chip-color: #a855f7;">🟣 Shot</button>
+                    <button class="sceneflow-filter-chip" data-type="audio" style="--chip-color: #f97316;">🟠 Audio</button>
+                    <button class="sceneflow-filter-chip" data-type="vfx" style="--chip-color: #06b6d4;">🔷 VFX</button>
+                    <button class="sceneflow-filter-chip" data-type="transition" style="--chip-color: #ec4899;">🩷 Transition</button>
+                    <button class="sceneflow-filter-chip" data-type="environment" style="--chip-color: #94a3b8;">⚪ Environment</button>
+                </div>
+
+                <!-- Split Studio View: Video Player + Synced Script -->
+                <div class="sceneflow-split-layout">
+                    <!-- Left: Video Player & Timeline -->
+                    <div class="sceneflow-player-pane">
+                        <div class="sceneflow-video-wrapper">
+                            <video id="sceneflow-player" controls playsinline></video>
+                        </div>
+                        <div class="sceneflow-player-status">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">Current Time:</span>
+                            <span id="sceneflow-live-timecode" class="sceneflow-timecode-badge">00:00:00.000</span>
+                        </div>
+                        <!-- Colored Cue Progress Track -->
+                        <div class="sceneflow-timeline-track-container" title="Click cue segment on timeline to jump video">
+                            <div id="sceneflow-timeline-bar" class="sceneflow-timeline-bar"></div>
+                            <div id="sceneflow-timeline-progress" class="sceneflow-timeline-progress"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Screenplay Reader Pane -->
+                    <div class="sceneflow-script-pane">
+                        <div class="sceneflow-pane-header">
+                            <span>📜 Synced Screenplay (Click any cue to seek)</span>
+                            <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="checkbox" id="sceneflow-autoscroll-toggle" checked> Auto-Scroll
+                            </label>
+                        </div>
+                        <div id="sceneflow-script-viewer" class="sceneflow-script-viewer">
+                            <!-- Dynamic Cues Injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timecode & Cue Table Editor -->
+                <div id="sceneflow-editor-container" class="sceneflow-editor-card hidden" style="margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; color: #fff;">✏️ Interactive Timecode & Cue Editor</h4>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="sceneflow-add-cue-btn" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">+ Add Cue</button>
+                            <button id="sceneflow-apply-editor-btn" class="btn btn-primary" style="padding: 0.35rem 0.95rem; font-size: 0.85rem; background: #10b981; border-color: #10b981;">✅ Update Sync</button>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="sceneflow-editor-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: rgba(255,255,255,0.05); text-align: left; font-size: 0.8rem; color: var(--text-secondary);">
+                                    <th style="padding: 0.5rem; width: 40px; text-align: center;">#</th>
+                                    <th style="padding: 0.5rem; width: 140px;">Cue Type</th>
+                                    <th style="padding: 0.5rem; width: 90px;">Start (s)</th>
+                                    <th style="padding: 0.5rem; width: 90px;">End (s)</th>
+                                    <th style="padding: 0.5rem;">Script Content</th>
+                                    <th style="padding: 0.5rem; width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sceneflow-editor-tbody">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-compare" id="video-compare-section">
                 <div class="video-container">
                     <h3>Original</h3>
                     <video id="original-video" controls muted loop></video>
@@ -144,11 +650,41 @@
                     </svg>
                     Download Processed Video
                 </button>
+                <button class="btn btn-secondary hidden" id="download-json-btn">
+                    📄 Download Log (JSON)
+                </button>
                 <button class="btn btn-secondary" id="reset-btn">Convert Another</button>
             </div>
         </section>
     </main>
+    </div>
 
-    <script src="app.js?v=2"></script>
+    <div id="modal-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2rem; border-radius: 12px; width: 80%; max-width: 600px; display: flex; flex-direction: column; gap: 1rem;">
+            <h3>✍️ Generated Prompt</h3>
+            <p>Copy this prompt into Midjourney or Stable Diffusion.</p>
+            <textarea id="prompt-output" rows="15" style="width: 100%; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; font-family: monospace; resize: vertical;" readonly></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button id="close-modal-btn" class="btn btn-secondary">Close</button>
+                <button id="copy-prompt-btn" class="btn btn-primary">Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="import-prompt-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2rem; border-radius: 12px; width: 80%; max-width: 700px; display: flex; flex-direction: column; gap: 1rem;">
+            <h3>📥 Import Prompt to Canvas</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Paste a generated prompt script here. The canvas will automatically populate characters, cameras, and keyframes based on the text. <b>Warning:</b> This will modify your current frame.</p>
+            <textarea id="import-prompt-input" rows="15" style="width: 100%; background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--border-color); padding: 1rem; border-radius: 8px; font-family: monospace; resize: vertical;" placeholder="[STAGE MAP — LOCKED]..."></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button id="close-import-modal-btn" class="btn btn-secondary">Cancel</button>
+                <button id="apply-import-btn" class="btn btn-primary" style="background: #2ecc71; border-color: #2ecc71;">✅ Apply to Canvas</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="blocking.js?v=3"></script>
+    <script src="sceneflow.js?v=3"></script>
+    <script src="app.js?v=5"></script>
 </body>
 </html>
