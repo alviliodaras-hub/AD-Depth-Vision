@@ -12,3 +12,4 @@ scenedetect[opencv]
 websockets
 av
 pypdf
+python-dotenv
