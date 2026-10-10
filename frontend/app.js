@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Launch Editor Button ---
+    const launchEditorBtn = document.getElementById('launch-editor-btn');
+    if (launchEditorBtn) {
+        launchEditorBtn.addEventListener('click', async () => {
+            window.open('/editor/', '_blank');
+        });
+    }
+
     // --- DOM Elements ---
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
@@ -19,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const downloadJsonBtn = document.getElementById('download-json-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const gridBackBtn = document.getElementById('grid-back-btn');
+    const autocutBackTopBtn = document.getElementById('autocut-back-top-btn');
+    const autocutSelectAllBtn = document.getElementById('autocut-select-all-btn');
+    const autocutDeselectAllBtn = document.getElementById('autocut-deselect-all-btn');
     const statusText = document.getElementById('status-text');
     const progressDetail = document.getElementById('progress-detail');
     const dropZoneTitle = document.getElementById('drop-zone-title');
@@ -32,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedMode = 'depth';
     let selectedColormap = 'grayscale';
     let selectedSafeMode = 'none';
+    let selectedResolution = '900';
     let selectedAutocutCapture = 'mid_frame';
 
     // Video sync event listener cleanup
@@ -112,13 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Safe Mode Selection ---
-    const safeModeOptions = document.querySelectorAll('.safe-mode-option');
+    const safeModeOptions = document.querySelectorAll('#safe-mode-options .safe-mode-option');
     safeModeOptions.forEach(option => {
         option.addEventListener('click', () => {
             safeModeOptions.forEach(o => o.classList.remove('selected'));
             option.classList.add('selected');
             option.querySelector('input').checked = true;
             selectedSafeMode = option.dataset.value;
+        });
+    });
+
+    // --- Resolution Selection ---
+    const resolutionOptions = document.querySelectorAll('#resolution-options .resolution-option');
+    resolutionOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            resolutionOptions.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            option.querySelector('input').checked = true;
+            selectedResolution = option.dataset.value;
         });
     });
 
@@ -279,7 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
         formData.append('mode', selectedMode);
         formData.append('colormap', selectedColormap);
         formData.append('safe_mode', selectedSafeMode);
+        formData.append('resolution', selectedResolution);
         formData.append('autocut_capture', selectedAutocutCapture);
+        
+        const autocutTextCheckbox = document.getElementById('autocut-text');
+        if (autocutTextCheckbox) {
+            formData.append('autocut_text', autocutTextCheckbox.checked);
+        }
+        
         formData.append('file', file);
 
         try {
@@ -350,12 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Autocut mode ---
         if (selectedMode === 'autocut') {
             if (videoCompareSection) videoCompareSection.classList.add('hidden');
-            if (downloadBtn) downloadBtn.classList.add('hidden');
+            if (downloadBtn) {
+                downloadBtn.classList.add('hidden');
+                downloadBtn.style.removeProperty('display');
+            }
+            if (gridBackBtn) {
+                gridBackBtn.classList.add('hidden');
+                gridBackBtn.style.removeProperty('display');
+            }
 
             if (statusData && statusData.frames && statusData.frames.length > 0) {
                 const autocutGallery = document.getElementById('autocut-gallery');
                 const autocutSelectionContainer = document.getElementById('autocut-selection-container');
-                if (autocutSelectionContainer) autocutSelectionContainer.classList.remove('hidden');
+                if (autocutSelectionContainer) {
+                    autocutSelectionContainer.classList.remove('hidden');
+                    autocutSelectionContainer.style.removeProperty('display');
+                }
                 if (autocutGallery) {
                     autocutGallery.innerHTML = '';
                     statusData.frames.forEach((frameUrl, i) => {
@@ -493,12 +534,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const imgs = autocutResult ? autocutResult.querySelectorAll('img') : [];
             if (imgs.length > 0) {
                 // Download grid images
-                for (const img of imgs) {
+                const textCheckbox = document.getElementById('autocut-download-text');
+                const includeText = textCheckbox ? textCheckbox.checked : true;
+                
+                for (let i = 0; i < imgs.length; i++) {
+                    const img = imgs[i];
+                    let targetUrl = includeText ? img.src : (img.dataset.cleanSrc || img.src);
                     try {
-                        const res = await fetch(img.src);
+                        const res = await fetch(targetUrl);
                         const blob = await res.blob();
                         const blobUrl = URL.createObjectURL(blob);
-                        const cleanFileName = img.src.split('/').pop().split('?')[0];
+                        let cleanFileName = targetUrl.split('/').pop().split('?')[0];
+                        if (!cleanFileName || !cleanFileName.toLowerCase().startsWith('grid_')) {
+                            cleanFileName = `Grid_${i + 1}.jpg`;
+                        }
                         
                         const link = document.createElement('a');
                         link.href = blobUrl;
@@ -559,6 +608,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (errorOverlay) errorOverlay.remove();
         depthVideo.style.display = '';
 
+        const downloadOptions = document.getElementById('autocut-download-options');
+        if (downloadOptions) downloadOptions.classList.add('hidden');
+
         // Reset safe mode
         safeModeOptions.forEach(o => o.classList.remove('selected'));
         const noneOption = document.querySelector('.safe-mode-option[data-value="none"]');
@@ -575,8 +627,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const autocutContainer = document.getElementById('autocut-container');
         const autocutSelectionContainer = document.getElementById('autocut-selection-container');
         const panoramaContainer = document.getElementById('panorama-container');
-        if (autocutContainer) autocutContainer.classList.add('hidden');
-        if (autocutSelectionContainer) autocutSelectionContainer.classList.add('hidden');
+        if (autocutContainer) {
+            autocutContainer.classList.add('hidden');
+            autocutContainer.style.removeProperty('display');
+        }
+        if (autocutSelectionContainer) {
+            autocutSelectionContainer.classList.add('hidden');
+            autocutSelectionContainer.style.removeProperty('display');
+        }
+        if (gridBackBtn) {
+            gridBackBtn.classList.add('hidden');
+            gridBackBtn.style.removeProperty('display');
+        }
         if (panoramaContainer) panoramaContainer.classList.add('hidden');
         if (sceneflowStudioContainer) sceneflowStudioContainer.classList.add('hidden');
         if (videoCompareSection) videoCompareSection.classList.remove('hidden');
@@ -621,7 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         video_id: currentVideoId,
                         frames: selectedFrames,
                         layout_mode: layoutMode,
-                        autocut_capture: selectedAutocutCapture
+                        autocut_capture: selectedAutocutCapture,
+                        include_text: document.getElementById('autocut-text') ? document.getElementById('autocut-text').checked : true
                     })
                 });
                 const data = await response.json();
@@ -630,16 +693,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     const autocutResult = document.getElementById('autocut-result');
                     const autocutSelectionContainer = document.getElementById('autocut-selection-container');
                     if (autocutResult) {
-                        autocutResult.innerHTML = data.grid_urls.map(url =>
-                            `<img src="${API_URL}${url}?t=${Date.now()}" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">`
+                        autocutResult.innerHTML = data.grid_urls.map((url, idx) =>
+                            `<img src="${API_URL}${url}?t=${Date.now()}" data-clean-src="${data.clean_grid_urls && data.clean_grid_urls[idx] ? API_URL + data.clean_grid_urls[idx] + '?t=' + Date.now() : ''}" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">`
                         ).join('');
                     }
-                    if (autocutContainer) autocutContainer.classList.remove('hidden');
-                    if (autocutSelectionContainer) autocutSelectionContainer.classList.add('hidden');
+                    if (autocutContainer) {
+                        autocutContainer.classList.remove('hidden');
+                        autocutContainer.style.removeProperty('display');
+                    }
+                    if (autocutSelectionContainer) {
+                        autocutSelectionContainer.classList.add('hidden');
+                        autocutSelectionContainer.style.removeProperty('display');
+                    }
 
                     if (downloadBtn) {
                         downloadBtn.classList.remove('hidden');
+                        downloadBtn.style.removeProperty('display');
                         downloadBtn.innerHTML = '⬇️ Download Grid Image';
+                    }
+                    const downloadOptions = document.getElementById('autocut-download-options');
+                    if (downloadOptions) {
+                        downloadOptions.classList.remove('hidden');
+                        downloadOptions.style.removeProperty('display');
+                    }
+                    if (gridBackBtn) {
+                        gridBackBtn.classList.remove('hidden');
+                        gridBackBtn.style.removeProperty('display');
                     }
                 } else {
                     alert('Error generating grid: ' + (data.message || 'Unknown error'));
@@ -651,6 +730,58 @@ document.addEventListener('DOMContentLoaded', () => {
                 generateGridBtn.innerText = '📸 Generate Grid from Selected';
                 generateGridBtn.disabled = false;
             }
+        });
+    }
+
+    // --- Back to Selection & Select/Deselect All Handlers ---
+    function goBackToAutocutSelection() {
+        if (typeof window.goBackToAutocutSelection === 'function') {
+            window.goBackToAutocutSelection();
+            return;
+        }
+        const autocutContainer = document.getElementById('autocut-container');
+        const autocutSelectionContainer = document.getElementById('autocut-selection-container');
+        if (autocutContainer) {
+            autocutContainer.classList.add('hidden');
+            autocutContainer.style.setProperty('display', 'none', 'important');
+        }
+        if (autocutSelectionContainer) {
+            autocutSelectionContainer.classList.remove('hidden');
+            autocutSelectionContainer.style.setProperty('display', 'block', 'important');
+            autocutSelectionContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (downloadBtn) {
+            downloadBtn.classList.add('hidden');
+            downloadBtn.style.setProperty('display', 'none', 'important');
+        }
+        if (gridBackBtn) {
+            gridBackBtn.classList.add('hidden');
+            gridBackBtn.style.setProperty('display', 'none', 'important');
+        }
+        const downloadOptions = document.getElementById('autocut-download-options');
+        if (downloadOptions) {
+            downloadOptions.classList.add('hidden');
+            downloadOptions.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    if (gridBackBtn) {
+        gridBackBtn.addEventListener('click', goBackToAutocutSelection);
+    }
+    if (autocutBackTopBtn) {
+        autocutBackTopBtn.addEventListener('click', goBackToAutocutSelection);
+    }
+
+    if (autocutSelectAllBtn && autocutGallery) {
+        autocutSelectAllBtn.addEventListener('click', () => {
+            const checkboxes = autocutGallery.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => { cb.checked = true; });
+        });
+    }
+    if (autocutDeselectAllBtn && autocutGallery) {
+        autocutDeselectAllBtn.addEventListener('click', () => {
+            const checkboxes = autocutGallery.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => { cb.checked = false; });
         });
     }
 

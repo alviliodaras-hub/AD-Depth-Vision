@@ -47,3 +47,4 @@ backend/test_dramaclaw.py
 backend/test_sceneflow.py
 backend/test_sketch_algo.py
 backend/test_sketch_api.py
+scratch/

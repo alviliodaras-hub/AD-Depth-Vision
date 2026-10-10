@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Form, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, Form, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +25,15 @@ COLORMAP_OPTIONS = {
 
 app = FastAPI(title="AD-Depth Vision API")
 
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/app"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -48,6 +57,31 @@ depth_processor = None
 three_d_processor = None
 playground_processor = None
 autocut_processor = None
+
+# --- NEW: Import WolfCut API ---
+try:
+    try:
+        from backend.wolfcut_api import router as wolfcut_router
+    except ImportError:
+        from wolfcut_api import router as wolfcut_router
+    app.include_router(wolfcut_router)
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    print("WolfCut API routing not loaded:", e)
+
+try:
+    from fastapi.staticfiles import StaticFiles
+    WOLFCUT_DIST = os.path.join(_PROJECT_DIR, "scratch", "WolfCut", "desktop", "dist")
+    if os.path.exists(WOLFCUT_DIST):
+        app.mount("/editor", StaticFiles(directory=WOLFCUT_DIST, html=True), name="editor")
+        print("Mounted /editor successfully ->", WOLFCUT_DIST)
+    else:
+        print("WOLFCUT_DIST not found:", WOLFCUT_DIST)
+except Exception as e:
+    print("Failed to mount /editor:", e)
+
+
 blocking_processor = None
 sceneflow_aligner = None
 
@@ -156,6 +190,7 @@ async def upload_video(
     mode: str = Form("depth"),
     colormap: str = Form("grayscale"),
     safe_mode: str = Form("none"),
+    resolution: int = Form(900),
     autocut_capture: str = Form("mid_frame"),
     location_sheet: Optional[UploadFile] = File(None)
 ):
@@ -188,11 +223,11 @@ async def upload_video(
             
     processing_status[video_id] = {"status": "processing", "progress": 0, "total": 0}
     
-    background_tasks.add_task(process_video_task, video_id, input_path, output_path, mode, colormap, safe_mode, autocut_capture, location_sheet_path)
+    background_tasks.add_task(process_video_task, video_id, input_path, output_path, mode, colormap, safe_mode, resolution, autocut_capture, location_sheet_path)
     
     return {"video_id": video_id, "status": "processing"}
 
-def process_video_task(video_id: str, input_path: str, output_path: str, mode: str = "depth", colormap: str = "grayscale", safe_mode: str = "none", autocut_capture: str = "mid_frame", location_sheet_path: str = None):
+def process_video_task(video_id: str, input_path: str, output_path: str, mode: str = "depth", colormap: str = "grayscale", safe_mode: str = "none", resolution: int = 900, autocut_capture: str = "mid_frame", location_sheet_path: str = None):
     global depth_processor, three_d_processor, playground_processor, autocut_processor
     
     def update_progress(current, total, **kwargs):
@@ -232,7 +267,7 @@ def process_video_task(video_id: str, input_path: str, output_path: str, mode: s
             if not depth_processor:
                 from processor import DepthVideoProcessor
                 depth_processor = DepthVideoProcessor()
-            depth_processor.process_video(input_path, output_path, progress_callback=update_progress, colormap=colormap, safe_mode=safe_mode)
+            depth_processor.process_video(input_path, output_path, progress_callback=update_progress, colormap=colormap, safe_mode=safe_mode, max_dim=resolution)
         # Ensure Safari compatibility
         if mode != "autocut" and mode != "playground":
             from safari_encode import convert_for_web
@@ -318,6 +353,7 @@ class GenerateGridRequest(BaseModel):
     frames: list
     layout_mode: Optional[str] = "all"
     autocut_capture: Optional[str] = "mid_frame"
+    include_text: Optional[bool] = True
 
 @app.post("/generate_grid")
 async def generate_grid(request: GenerateGridRequest):
@@ -328,14 +364,22 @@ async def generate_grid(request: GenerateGridRequest):
         return JSONResponse(status_code=400, content={"message": "No frames provided."})
         
     loaded_frames = []
+    clean_frames = []
     for frame_url in request.frames:
         # url is /outputs/...
         rel_path = frame_url.replace("/outputs/", "")
+        
         abs_path = os.path.join(PROCESSED_DIR, rel_path)
+        clean_rel_path = rel_path.replace(".jpg", "_clean.jpg")
+        clean_abs_path = os.path.join(PROCESSED_DIR, clean_rel_path)
+        
         if os.path.exists(abs_path):
             img = cv2.imread(abs_path)
+            clean_img = cv2.imread(clean_abs_path) if os.path.exists(clean_abs_path) else img
+            
             if img is not None:
                 loaded_frames.append(img)
+                clean_frames.append(clean_img)
                 
     if not loaded_frames:
         return JSONResponse(status_code=400, content={"message": "Could not load any of the selected frames."})
@@ -348,15 +392,32 @@ async def generate_grid(request: GenerateGridRequest):
     
     # Split frames based on layout mode
     chunks = []
+    clean_chunks = []
     if request.layout_mode == "3x3":
         for i in range(0, len(loaded_frames), 9):
             chunks.append(loaded_frames[i:i+9])
+            clean_chunks.append(clean_frames[i:i+9])
     else:
         chunks.append(loaded_frames)
+        clean_chunks.append(clean_frames)
         
     grid_urls = []
+    clean_grid_urls = []
     
-    for chunk_idx, chunk in enumerate(chunks):
+    # Determine sequential numbering for Grid_n.jpg
+    import re
+    existing_nums = []
+    if os.path.exists(PROCESSED_DIR):
+        for fname in os.listdir(PROCESSED_DIR):
+            m = re.match(r"^Grid_(\d+)\.jpg$", fname, re.IGNORECASE)
+            if m:
+                try:
+                    existing_nums.append(int(m.group(1)))
+                except ValueError:
+                    pass
+    start_n = (max(existing_nums) + 1) if existing_nums else 1
+
+    for chunk_idx, (chunk, clean_chunk) in enumerate(zip(chunks, clean_chunks)):
         num_frames = len(chunk)
         
         if request.layout_mode == "3x3":
@@ -372,13 +433,15 @@ async def generate_grid(request: GenerateGridRequest):
         
         # Background canvas
         grid_img = np.zeros((grid_h, grid_w, 3), dtype=np.uint8)
+        grid_clean_img = np.zeros((grid_h, grid_w, 3), dtype=np.uint8)
         
-        for i, frame in enumerate(chunk):
+        for i, (frame, c_frame) in enumerate(zip(chunk, clean_chunk)):
             r = i // cols
             c = i % cols
             
             # Resize frame
             resized = cv2.resize(frame, (target_w, target_h))
+            resized_c = cv2.resize(c_frame, (target_w, target_h))
             
             # Calculate positions
             x_offset = c * (target_w + gap)
@@ -386,15 +449,20 @@ async def generate_grid(request: GenerateGridRequest):
             
             # Place frame
             grid_img[y_offset:y_offset+target_h, x_offset:x_offset+target_w] = resized
+            grid_clean_img[y_offset:y_offset+target_h, x_offset:x_offset+target_w] = resized_c
             
-        part_suffix = f"_part{chunk_idx+1}" if len(chunks) > 1 else ""
-        grid_filename = f"{request.video_id}_grid{part_suffix}.jpg"
+        current_n = start_n + chunk_idx
+        grid_filename = f"Grid_{current_n}.jpg"
+        grid_clean_filename = f"Grid_{current_n}_clean.jpg"
         grid_path = os.path.join(PROCESSED_DIR, grid_filename)
+        grid_clean_path = os.path.join(PROCESSED_DIR, grid_clean_filename)
         cv2.imwrite(grid_path, grid_img)
+        cv2.imwrite(grid_clean_path, grid_clean_img)
         
         grid_urls.append(f"/outputs/{grid_filename}")
+        clean_grid_urls.append(f"/outputs/{grid_clean_filename}")
         
-    return {"grid_urls": grid_urls}
+    return {"grid_urls": grid_urls, "clean_grid_urls": clean_grid_urls}
 
 # --- SceneFlow: Screenplay-Video Sync & Cue Analyzer Endpoints ---
 @app.post("/sceneflow/align_video_script")
@@ -729,4 +797,52 @@ async def health_check():
 @app.get("/")
 async def root():
     return {"message": "AD-Depth Vision API is running. Visit /app for the UI."}
+
+@app.post("/launch_editor")
+async def launch_editor():
+    import urllib.request
+    import subprocess
+    import tempfile
+    import platform
+    
+    app_target_path = os.path.join(_PROJECT_DIR, "WolfCut.app")
+    
+    if not os.path.exists(app_target_path):
+        try:
+            dmg_url = "https://github.com/jub0t/WolfCut/releases/download/v0.2.0-alpha.1/WolfCut_0.2.0_aarch64.dmg" 
+            
+            dmg_path = os.path.join(tempfile.gettempdir(), "WolfCut.dmg")
+            print(f"Downloading WolfCut editor from {dmg_url}...")
+            
+            req = urllib.request.Request(dmg_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response, open(dmg_path, 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+                
+            print("Mounting DMG...")
+            mount_point = os.path.join(tempfile.gettempdir(), "WolfCutMount")
+            os.makedirs(mount_point, exist_ok=True)
+            subprocess.run(["hdiutil", "attach", dmg_path, "-mountpoint", mount_point, "-quiet"], check=True)
+            
+            print("Copying app...")
+            source_app = os.path.join(mount_point, "WolfCut.app")
+            if os.path.exists(app_target_path):
+                shutil.rmtree(app_target_path)
+            shutil.copytree(source_app, app_target_path)
+            
+            print("Unmounting...")
+            subprocess.run(["hdiutil", "detach", mount_point, "-quiet"], check=True)
+            
+            print("Removing quarantine flags...")
+            subprocess.run(["xattr", "-cr", app_target_path], check=False)
+            
+            os.remove(dmg_path)
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"status": "error", "message": f"Gagal mengunduh/menginstal WolfCut: {str(e)}"})
+
+    try:
+        print("Launching WolfCut...")
+        subprocess.Popen(["open", app_target_path])
+        return {"status": "success", "message": "WolfCut Editor berhasil dibuka."}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": f"Gagal membuka WolfCut: {str(e)}"})
 

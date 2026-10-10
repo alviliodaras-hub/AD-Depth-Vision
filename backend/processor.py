@@ -31,7 +31,7 @@ class DepthVideoProcessor:
         print("Depth Anything V2 loaded successfully.")
 
     @torch.inference_mode()
-    def process_video(self, input_path: str, output_path: str, progress_callback=None, colormap="grayscale", denoise=True, safe_mode="none"):
+    def process_video(self, input_path: str, output_path: str, progress_callback=None, colormap="grayscale", denoise=True, safe_mode="none", max_dim=900):
         cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
             raise ValueError(f"Error opening video file {input_path}")
@@ -41,8 +41,6 @@ class DepthVideoProcessor:
         fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        # Output resolution capped at 720p
-        max_dim = 720
         scale = 1.0
         if max(width, height) > max_dim:
             scale = max_dim / max(width, height)
@@ -126,13 +124,20 @@ class DepthVideoProcessor:
                     depth_map = result["depth"]
                     depth_array = np.array(depth_map, dtype=np.float32)
 
-                    # Clean min-max normalization matching true relative depth
-                    d_min = float(depth_array.min())
-                    d_max = float(depth_array.max())
-                    if d_max - d_min > 0:
+                    # ── Peningkatan Kontras Kedalaman (Percentile & Gamma) ──
+                    # Pakai persentil 2% & 98% untuk mengabaikan noise outlier yang bikin depth pudar
+                    d_min = float(np.percentile(depth_array, 2))
+                    d_max = float(np.percentile(depth_array, 98))
+                    
+                    if d_max - d_min > 0.001:
                         depth_norm = (depth_array - d_min) / (d_max - d_min)
+                        depth_norm = np.clip(depth_norm, 0, 1) # Pastikan tetap di range 0-1
                     else:
                         depth_norm = np.zeros_like(depth_array)
+                        
+                    # Gamma correction untuk mengangkat area background agar lebih jelas (tidak terlalu gelap/pudar)
+                    gamma = 0.85 
+                    depth_norm = np.power(depth_norm, gamma)
 
                     # ── Temporal Stabilization (anti-flicker) ──
                     # Blend current frame with previous using exponential moving average
@@ -155,7 +160,7 @@ class DepthVideoProcessor:
 
                     # ── Glass Effect: Crystal-clear polished depth ──
                     # 1. CLAHE — adaptive contrast for clearer depth separation
-                    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
                     depth_uint8 = clahe.apply(depth_uint8)
 
                     # 2. Second bilateral pass — glass-smooth surface polish

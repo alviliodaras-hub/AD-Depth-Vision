@@ -31,7 +31,7 @@ class BackgroundLockProcessor:
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         # Output resolution capped at 720p
-        max_dim = 720
+        max_dim = 900
         scale = 1.0
         if max(width, height) > max_dim:
             scale = max_dim / max(width, height)

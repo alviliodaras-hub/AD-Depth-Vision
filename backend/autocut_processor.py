@@ -136,12 +136,19 @@ class AutocutProcessor:
             timecode_str = item["timecode"]
             raw_frame = item["frame"].copy()
             
+            clean_frame = raw_frame.copy()
+            
             # Apply shot number (top-left) and timecode (bottom-right)
             draw_overlay_text(raw_frame, shot_text, timecode_str)
             
             frame_filename = f"shot_{shot_idx:03d}.jpg"
+            clean_filename = f"shot_{shot_idx:03d}_clean.jpg"
+            
             frame_path = os.path.join(dir_name, frame_filename)
+            clean_path = os.path.join(dir_name, clean_filename)
+            
             cv2.imwrite(frame_path, raw_frame)
+            cv2.imwrite(clean_path, clean_frame)
             saved_frames.append(frame_path)
             
             shot_metadata.append({

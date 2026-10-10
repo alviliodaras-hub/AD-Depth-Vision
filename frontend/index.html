@@ -60,6 +60,15 @@
                             <p>Interactive 3D Blocking & Previz Scene</p>
                         </div>
                     </label>
+                    
+                    <!-- NEW: Video Editor mode card -->
+                    <label class="mode-card" id="launch-editor-card" style="cursor: pointer;" onclick="window.open('/editor/', '_blank')">
+                        <div class="mode-icon">✂️</div>
+                        <div class="mode-info">
+                            <strong>ADEditor</strong>
+                            <p>Multi-track Timeline Editor</p>
+                        </div>
+                    </label>
                     <label class="mode-card" data-mode="autocut">
                         <input type="radio" name="mode" value="autocut" hidden>
                         <div class="mode-icon">🎬</div>
@@ -136,6 +145,40 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Resolution Selector -->
+            <div class="resolution-selector" id="resolution-section">
+                <div style="display:flex; align-items: center; gap: 8px;">
+                    <h3>🖥️ Render Resolution</h3>
+                </div>
+                <p class="safe-mode-desc">Pilih resolusi maksimum. Lebih tinggi = lebih tajam tapi lebih lambat.</p>
+                <div class="safe-mode-options" id="resolution-options">
+                    <label class="resolution-option safe-mode-option" data-value="720">
+                        <input type="radio" name="resolution" value="720" hidden>
+                        <div class="safe-mode-icon">⚡</div>
+                        <div class="safe-mode-info">
+                            <span class="safe-mode-title">Fast (720p)</span>
+                            <span class="safe-mode-desc">Render cepat</span>
+                        </div>
+                    </label>
+                    <label class="resolution-option safe-mode-option selected" data-value="900">
+                        <input type="radio" name="resolution" value="900" checked hidden>
+                        <div class="safe-mode-icon">✨</div>
+                        <div class="safe-mode-info">
+                            <span class="safe-mode-title">Quality (900p)</span>
+                            <span class="safe-mode-desc">Default & Jernih</span>
+                        </div>
+                    </label>
+                    <label class="resolution-option safe-mode-option" data-value="1080">
+                        <input type="radio" name="resolution" value="1080" hidden>
+                        <div class="safe-mode-icon">🔥</div>
+                        <div class="safe-mode-info">
+                            <span class="safe-mode-title">Ultra (1080p)</span>
+                            <span class="safe-mode-desc">Tajam, lambat</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
             <div class="safe-mode-selector" id="safe-mode-section">
                 <h3>🛡️ Platform-Safe Mode</h3>
                 <p class="safe-mode-desc">Tambahkan elemen visual agar output tidak kena restrict di platform AI</p>
@@ -179,11 +222,15 @@
                 <h3>🎬 Autocut Settings</h3>
                 <div class="control-group">
                     <label for="autocut-capture">Capture Frame</label>
-                    <select id="autocut-capture" style="width: 100%; padding: 0.8rem; background: var(--card-bg); border: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 8px;">
+                    <select id="autocut-capture" style="width: 100%; padding: 0.8rem; background: var(--card-bg); border: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: 8px; margin-bottom: 1rem;">
                         <option value="mid_frame" selected>Mid Frame (Tengah Shot - Recommended)</option>
                         <option value="first_frame">First Frame (Awal Shot)</option>
                         <option value="end_frame">End Frame (Akhir Shot)</option>
                     </select>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary);">
+                        <input type="checkbox" id="autocut-text" checked style="width: 18px; height: 18px; accent-color: var(--primary);">
+                        Tampilkan Shot Number & Timecode di Gambar
+                    </label>
                 </div>
             </div>
 
@@ -511,8 +558,16 @@ Dr. Aris flips the breaker switch.
             </div>
             
             <div id="autocut-selection-container" class="hidden" style="margin-top: 1.5rem;">
-                <h3>🎬 Autocut Selection</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Select the frames you want to include in the grid.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <h3 style="margin: 0;">🎬 Autocut Selection</h3>
+                        <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0;">Select the frames you want to include in the grid.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="autocut-select-all-btn" class="btn btn-secondary" onclick="window.autocutSelectAll(true)" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">✓ Select All</button>
+                        <button type="button" id="autocut-deselect-all-btn" class="btn btn-secondary" onclick="window.autocutSelectAll(false)" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">✗ Deselect All</button>
+                    </div>
+                </div>
                 <div id="autocut-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 1rem;">
                     <!-- Thumbnails will be injected here -->
                 </div>
@@ -529,13 +584,19 @@ Dr. Aris flips the breaker switch.
                             <span class="layout-label">All-in-One</span>
                         </label>
                     </div>
+                    </div>
                 </div>
                 
                 <button id="generate-grid-btn" class="btn btn-primary" style="width: 100%; font-size: 1.1rem;">📸 Generate Grid from Selected</button>
             </div>
             
             <div id="autocut-container" class="hidden">
-                <h3>🎬 Autocut Storyboard Grid</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <h3 style="margin: 0;">🎬 Autocut Storyboard Grid</h3>
+                    <button type="button" class="btn btn-secondary" id="autocut-back-top-btn" onclick="window.goBackToAutocutSelection()" style="padding: 0.45rem 1rem; font-size: 0.9rem;">
+                        ⬅️ Back to Selection
+                    </button>
+                </div>
                 <div id="autocut-result" class="autocut-results-wrapper"></div>
             </div>
 
@@ -641,6 +702,14 @@ Dr. Aris flips the breaker switch.
                 </div>
             </div>
             
+            <!-- Autocut Download Text Toggle -->
+            <div id="autocut-download-options" class="hidden" style="margin-bottom: 1.5rem; display: flex; justify-content: center; width: 100%;">
+                <label style="display: inline-flex; align-items: center; gap: 0.75rem; cursor: pointer; color: var(--text-primary); background: rgba(255,255,255,0.05); padding: 0.75rem 1.5rem; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: background 0.2s ease;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                    <input type="checkbox" id="autocut-download-text" checked style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; margin: 0;">
+                    <span style="font-weight: 500; font-size: 0.95rem; letter-spacing: 0.02em;">Tampilkan Shot Number & Timecode saat di-Download</span>
+                </label>
+            </div>
+            
             <div class="actions">
                 <button class="btn btn-primary" id="download-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -652,6 +721,9 @@ Dr. Aris flips the breaker switch.
                 </button>
                 <button class="btn btn-secondary hidden" id="download-json-btn">
                     📄 Download Log (JSON)
+                </button>
+                <button class="btn btn-secondary hidden" id="grid-back-btn" onclick="window.goBackToAutocutSelection()">
+                    ⬅️ Back to Selection
                 </button>
                 <button class="btn btn-secondary" id="reset-btn">Convert Another</button>
             </div>
@@ -683,8 +755,49 @@ Dr. Aris flips the breaker switch.
         </div>
     </div>
 
-    <script src="blocking.js?v=3"></script>
-    <script src="sceneflow.js?v=3"></script>
-    <script src="app.js?v=5"></script>
+    <script>
+        function goBackToAutocutSelection() {
+            var autocutContainer = document.getElementById('autocut-container');
+            var autocutSelectionContainer = document.getElementById('autocut-selection-container');
+            var downloadBtn = document.getElementById('download-btn');
+            var gridBackBtn = document.getElementById('grid-back-btn');
+            
+            if (autocutContainer) {
+                autocutContainer.classList.add('hidden');
+                autocutContainer.style.setProperty('display', 'none', 'important');
+            }
+            if (autocutSelectionContainer) {
+                autocutSelectionContainer.classList.remove('hidden');
+                autocutSelectionContainer.style.setProperty('display', 'block', 'important');
+                autocutSelectionContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            if (downloadBtn) {
+                downloadBtn.classList.add('hidden');
+                downloadBtn.style.setProperty('display', 'none', 'important');
+            }
+            if (gridBackBtn) {
+                gridBackBtn.classList.add('hidden');
+                gridBackBtn.style.setProperty('display', 'none', 'important');
+            }
+            var downloadOptions = document.getElementById('autocut-download-options');
+            if (downloadOptions) {
+                downloadOptions.classList.add('hidden');
+                downloadOptions.style.setProperty('display', 'none', 'important');
+            }
+        }
+        window.goBackToAutocutSelection = goBackToAutocutSelection;
+
+        function autocutSelectAll(check) {
+            var gallery = document.getElementById('autocut-gallery');
+            if (gallery) {
+                var checkboxes = gallery.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function(cb) { cb.checked = check; });
+            }
+        }
+        window.autocutSelectAll = autocutSelectAll;
+    </script>
+    <script src="blocking.js?v=4"></script>
+    <script src="sceneflow.js?v=4"></script>
+    <script src="app.js?v=9"></script>
 </body>
 </html>
